@@ -114,7 +114,7 @@ export class CommitteeMember extends Struct({
     let C = new Array<Group>(this.T);
     for (let i = 0; i < this.T; i++) {
       a[i] = Field.random();
-      C[i] = Group.generator.scale(Scalar.fromFields(a[i].toFields()));
+      C[i] = Group.generator.scale(Scalar.fromFields([a[i]]));
     }
     let f = new Array<Field>(this.N);
     for (let i = 0; i < this.N; i++) {
@@ -130,7 +130,9 @@ export class CommitteeMember extends Struct({
     return new Round1Contribution({
       C: secret.C,
       keyId: keyId,
-      witness: new (getMerkleWitnessType(this.index - 1))(dummyWitness),
+      witness: new (getMerkleWitnessType(ROUND_1_CONTRIBUTION_DEPTH))(
+        dummyWitness
+      ),
     });
   }
 
@@ -155,7 +157,9 @@ export class CommitteeMember extends Struct({
     }
     return new Round2Contribution({
       data: data,
-      witness: new (getMerkleWitnessType(this.index - 1))(dummyWitness),
+      witness: new (getMerkleWitnessType(ROUND_2_CONTRIBUTION_DEPTH))(
+        dummyWitness
+      ),
       keyId: keyId,
     });
   }
@@ -181,7 +185,9 @@ export class CommitteeMember extends Struct({
     }
     return new TallyContribution({
       D: D,
-      witness: new (getMerkleWitnessType(this.index - 1))(dummyWitness),
+      witness: new (getMerkleWitnessType(TALLY_CONTRIBUTION_DEPTH))(
+        dummyWitness
+      ),
       keyId: keyId,
     });
   }
@@ -208,4 +214,23 @@ export class CommitteeMember extends Struct({
     }
     return lagrangeCoefficient;
   }
+
+  // getResultVector(listIndex: number[], D: Group[], M: Group[]) {
+  //   let lagrangeCoefficient = this.getLagrangeCoefficient(listIndex);
+  //   let sumD = Array<Group>(M.length);
+  //   for (let i = 0; i < sumD.length; i++) {
+  //     sumD[i] = BabyJub.getZeroPoint();
+  //   }
+  //   for (let i = 0; i < threshold; i++) {
+  //     for (let j = 0; j < sumD.length; j++) {
+  //       sumD[j] = BabyJub.addPoint(
+  //         sumD[j],
+  //         BabyJub.mulPointEscalar(
+  //           Utils.getBigIntegerArray(D[i][j]),
+  //           lagrangeCoefficient[i]
+  //         )
+  //       );
+  //     }
+  //   }
+  // }
 }
