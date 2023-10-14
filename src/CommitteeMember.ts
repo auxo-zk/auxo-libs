@@ -19,7 +19,7 @@ const ROUND_1_CONTRIBUTION_DEPTH = 10;
 const ROUND_2_CONTRIBUTION_DEPTH = 10;
 const TALLY_CONTRIBUTION_DEPTH = 10;
 
-function getMerkleWitnessType(depth: number) {
+export function getMerkleWitnessType(depth: number) {
     return MerkleWitness(depth);
 }
 
@@ -114,7 +114,7 @@ export class CommitteeMember extends Struct({
         let C = new Array<Group>(this.T);
         for (let i = 0; i < this.T; i++) {
             a[i] = Field.random();
-            C[i] = Group.generator.scale(Scalar.fromFields([a[i]]));
+            C[i] = Group.generator.scale(Scalar.fromBits(a[i].toBits(255)));
         }
         let f = new Array<Field>(this.N);
         for (let i = 0; i < this.N; i++) {
