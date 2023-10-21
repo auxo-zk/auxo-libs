@@ -1,57 +1,39 @@
 import {
-    Bool,
-    Encryption,
-    Field,
-    Group,
-    MerkleWitness,
-    Poseidon,
-    PrivateKey,
-    Provable,
-    PublicKey,
-    Scalar,
-    Struct,
-    UInt32,
+  Bool,
+  Encryption,
+  Field,
+  Group,
+  MerkleWitness,
+  Poseidon,
+  PrivateKey,
+  Provable,
+  PublicKey,
+  Scalar,
+  Struct,
+  UInt32,
 } from 'o1js';
 
-export class ElgamalECC {
-    static xor(a: Field, b: Field) {
-        let a_bits = a.toBits(255);
-        let b_bits = b.toBits(255);
-        // console.log(a_bits.toString());
-        let r = Provable.witness(Field, () => Field(0));
-        let r_bits = r.toBits(255);
-        for (let i = 0; i < r_bits.length; i++) {
-            r_bits[i] = a_bits[i]
-                .and(b_bits[i].not())
-                .or(a_bits[i].not().and(b_bits[i]));
-        }
-        return (r = Field.fromBits(r_bits));
-    }
+export { encrypt, decrypt };
 
-    static encrypt(
-        m: Field,
-        pbK: PublicKey
-    ): {
-        b: Scalar;
-        U: Group;
-        c: Field;
-    } {
-        let b = Provable.witness(Scalar, () => Scalar.random());
-        let U = Group.generator.scale(b);
-        let V = pbK.toGroup().scale(b);
-        let k = Poseidon.hash(U.toFields().concat(V.toFields()));
-        let c = this.xor(k, m);
-        return {
-            b: b,
-            U: U,
-            c: c,
-        };
-    }
+function encrypt(
+  m: bigint,
+  pbK: PublicKey
+): {
+  b: bigint;
+  c: bigint;
+  U: Group;
+} {
+  let b = Scalar.random();
+  let U = Group.generator.scale(b);
+  let V = pbK.toGroup().scale(b);
+  let k = Poseidon.hash(U.toFields().concat(V.toFields())).toBigInt();
+  let c = k ^ m;
+  return { b: b.toBigInt(), c, U };
+}
 
-    static decrypt(U: Group, c: Field, prvK: PrivateKey): { m: Field } {
-        let V = U.scale(Scalar.fromFields(prvK.toFields()));
-        let k = Poseidon.hash(U.toFields().concat(V.toFields()));
-        let m = this.xor(k, c);
-        return { m: m };
-    }
+function decrypt(c: bigint, U: Group, prvK: PrivateKey): { m: bigint } {
+  let V = U.scale(Scalar.from(prvK.toBigInt()));
+  let k = Poseidon.hash(U.toFields().concat(V.toFields())).toBigInt();
+  let m = k ^ c;
+  return { m };
 }

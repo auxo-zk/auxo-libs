@@ -1,236 +1,201 @@
 import {
-    Bool,
-    Encryption,
-    Field,
-    Group,
-    MerkleWitness,
-    Poseidon,
-    PrivateKey,
-    Provable,
-    PublicKey,
-    Scalar,
-    Struct,
-    UInt32,
+  Bool,
+  Encryption,
+  Field,
+  Group,
+  MerkleWitness,
+  Poseidon,
+  PrivateKey,
+  Provable,
+  PublicKey,
+  Scalar,
+  Struct,
+  UInt32,
 } from 'o1js';
-import { ElgamalECC } from './Elgamal';
+import * as ElgamalECC from './Elgamal';
 
-const MEMBERSHIP_DEPTH = 10;
-const ROUND_1_CONTRIBUTION_DEPTH = 10;
-const ROUND_2_CONTRIBUTION_DEPTH = 10;
-const TALLY_CONTRIBUTION_DEPTH = 10;
-
-export function getMerkleWitnessType(depth: number) {
-    return MerkleWitness(depth);
-}
-
-let w = {
-    isLeft: false,
-    sibling: Field(0),
-};
-let dummyWitness = Array.from(Array(10).keys()).map(() => w);
-
-export const ContributionStage: { [key: string]: Field } = {
-    ROUND_1: Field(0),
-    ROUND_2: Field(1),
-    DECRYPTION: Field(2),
+export {
+  SecretPolynomial,
+  Round1Contribution,
+  Round2Contribution,
+  Round2Data,
+  TallyContribution,
+  calculatePublicKey,
+  calculatePolynomialValue,
+  generateRandomPolynomial,
+  getRound1Contribution,
+  getRound2Contribution,
+  getTallyContribution,
+  getLagrangeCoefficient,
+  getResultVector,
+  accumulateEncryption,
 };
 
-export class SecretPolynomial extends Struct({
-    C: [Group],
-    a: [Field],
-    a0: Field,
-    f: [Field],
-}) {}
+type SecretPolynomial = {
+  a: Scalar[];
+  C: Group[];
+  f: Scalar[];
+};
 
-export class Round1Contribution extends Struct({
-    C: [Group],
-    witness: getMerkleWitnessType(ROUND_1_CONTRIBUTION_DEPTH),
-    keyId: Field,
-}) {
-    getHash(): Field {
-        let packed: Field[] = [];
-        for (let i = 0; i < this.C.length; i++) {
-            packed.concat(this.C[i].toFields());
-        }
-        return Poseidon.hash(packed);
-    }
+type Round1Contribution = {
+  C: Group[];
+};
+
+type Round2Data = {
+  c: bigint;
+  U: Group;
+};
+
+type Round2Contribution = {
+  data: Round2Data[];
+};
+
+type TallyContribution = {
+  D: Group[];
+};
+
+function calculatePublicKey(
+  round1Contributions: Round1Contribution[]
+): PublicKey {
+  let result = Group.zero;
+  for (let i = 0; i < round1Contributions.length; i++) {
+    result = result.add(round1Contributions[i].C[0]);
+  }
+  return PublicKey.fromGroup(result);
 }
 
-export class Round2Data extends Struct({ U: Group, c: Field }) {
-    getHash(): Field {
-        return Poseidon.hash(this.U.toFields().concat(this.c));
-    }
+function calculatePolynomialValue(a: Scalar[], x: number): Scalar {
+  let result = Scalar.from(a[0]);
+  for (let i = 1; i < a.length; i++) {
+    result = result.add(a[i].mul(Scalar.from(Math.pow(x, i))));
+  }
+  return result;
 }
 
-export class Round2Contribution extends Struct({
-    data: [Round2Data],
-    witness: getMerkleWitnessType(ROUND_2_CONTRIBUTION_DEPTH),
-    keyId: Field,
-}) {
-    getHash(): Field {
-        return Poseidon.hash(this.data.map((e) => e.getHash()));
-    }
+function generateRandomPolynomial(T: number, N: number): SecretPolynomial {
+  let a = new Array<Scalar>(T);
+  let C = new Array<Group>(T);
+  for (let i = 0; i < T; i++) {
+    a[i] = Scalar.random();
+    C[i] = Group.generator.scale(a[i]);
+  }
+  let f = new Array<Scalar>(N);
+  for (let i = 0; i < N; i++) {
+    f[i] = calculatePolynomialValue(a, i + 1);
+  }
+  return { a, C, f };
 }
 
-export class TallyContribution extends Struct({
-    D: [Group],
-    witness: getMerkleWitnessType(ROUND_2_CONTRIBUTION_DEPTH),
-    keyId: Field,
-}) {
-    getHash(): Field {
-        return Poseidon.hash(this.D.map((p) => Field.fromFields(p.toFields())));
-    }
+function getRound1Contribution(secret: SecretPolynomial): Round1Contribution {
+  return { C: secret.C };
 }
 
-export class CommitteeMember extends Struct({
-    publicKey: PublicKey,
-    index: Number,
-    witness: getMerkleWitnessType(10),
-    T: Number,
-    N: Number,
-}) {
-    static getPublicKey(round1Contributions: Round1Contribution[]): PublicKey {
-        let result = Group.zero;
-        for (let i = 0; i < round1Contributions.length; i++) {
-            result = result.add(round1Contributions[i].C[0]);
-        }
-        return PublicKey.fromGroup(result);
+function getRound2Contribution(
+  secret: SecretPolynomial,
+  index: number,
+  publicKeys: PublicKey[]
+): Round2Contribution {
+  let data = new Array<Round2Data>(secret.f.length);
+  for (let i = 0; i < data.length; i++) {
+    if (i + 1 == Number(index)) {
+      data[i].U = Group.zero;
+      data[i].c = 0n;
+    } else {
+      let encryption = ElgamalECC.encrypt(
+        secret.f[i].toBigInt(),
+        publicKeys[i]
+      );
+      data[i].U = encryption.U;
+      data[i].c = encryption.c;
     }
+  }
+  return { data };
+}
 
-    getHash(): Field {
-        return Poseidon.hash(this.publicKey.toFields());
+function getTallyContribution(
+  secret: SecretPolynomial,
+  index: number,
+  round2Data: Round2Data[],
+  R: Group[]
+) {
+  let decryptions: Scalar[] = round2Data.map((data) =>
+    Scalar.from(
+      ElgamalECC.decrypt(
+        data.c,
+        data.U,
+        PrivateKey.fromBigInt(secret.a[0].toBigInt())
+      ).m
+    )
+  );
+  let ski: Scalar = decryptions.reduce(
+    (prev: Scalar, curr: Scalar) => prev.add(curr),
+    secret.f[index]
+  );
+
+  let D = new Array<Group>(R.length);
+  for (let i = 0; i < R.length; i++) {
+    D[i] = R[i].scale(ski);
+  }
+  return { D };
+}
+
+function getLagrangeCoefficient(listIndex: number[]): Scalar[] {
+  const threshold = listIndex.length;
+  let lagrangeCoefficient = new Array<Scalar>(threshold);
+  for (let i = 0; i < threshold; i++) {
+    let indexI = listIndex[i];
+    let numerator = Scalar.from(1);
+    let denominator = Scalar.from(1);
+    for (let j = 0; j < threshold; j++) {
+      let indexJ = listIndex[j];
+      if (indexI != indexJ) {
+        numerator = numerator.mul(Scalar.from(indexJ));
+        denominator = denominator.mul(Scalar.from(indexJ - indexI));
+      }
     }
+    lagrangeCoefficient[i] = numerator.div(denominator);
+  }
+  return lagrangeCoefficient;
+}
 
-    calculatePolynomialValue(a: Field[], x: number): Field {
-        let result = Field(0);
-        for (let i = 0; i < this.T; i++) {
-            result = result.add(a[i].mul(Math.pow(x, i)));
-        }
-        return result;
+function getResultVector(
+  listIndex: number[],
+  D: Group[][],
+  M: Group[]
+): Group[] {
+  let lagrangeCoefficient = getLagrangeCoefficient(listIndex);
+  let threshold = listIndex.length;
+  let sumD = Array<Group>(M.length);
+  sumD.fill(Group.zero);
+  for (let i = 0; i < threshold; i++) {
+    for (let j = 0; j < sumD.length; j++) {
+      sumD[j] = sumD[j].add(D[i][j].scale(lagrangeCoefficient[i]));
     }
+  }
+  // console.log(sumD);
+  let result = Array<Group>(M.length);
+  for (let i = 0; i < result.length; i++) {
+    result[i] = M[i].sub(sumD[i]);
+  }
+  return result;
+}
 
-    getRandomPolynomial(): SecretPolynomial {
-        let a = new Array<Field>(this.T);
-        let C = new Array<Group>(this.T);
-        for (let i = 0; i < this.T; i++) {
-            a[i] = Field.random();
-            C[i] = Group.generator.scale(Scalar.fromBits(a[i].toBits(255)));
-        }
-        let f = new Array<Field>(this.N);
-        for (let i = 0; i < this.N; i++) {
-            f[i] = this.calculatePolynomialValue(a, i + 1);
-        }
-        return { C: C, a: a, a0: a[0], f: f };
+function accumulateEncryption(
+  R: Group[][],
+  M: Group[][],
+  quantity: number,
+  dimension: number
+): { R: Group[]; M: Group[] } {
+  let sumR = new Array<Group>(dimension);
+  let sumM = new Array<Group>(dimension);
+  sumR.fill(Group.zero);
+  sumM.fill(Group.zero);
+
+  for (let i = 0; i < quantity; i++) {
+    for (let j = 0; j < dimension; j++) {
+      sumR[j] = sumR[j].add(R[i][j]);
+      sumM[j] = sumM[j].add(M[i][j]);
     }
-
-    getRound1Contribution(
-        secret: SecretPolynomial,
-        keyId: Field
-    ): Round1Contribution {
-        return new Round1Contribution({
-            C: secret.C,
-            keyId: keyId,
-            witness: new (getMerkleWitnessType(ROUND_1_CONTRIBUTION_DEPTH))(
-                dummyWitness
-            ),
-        });
-    }
-
-    getRound2Contribution(
-        secret: SecretPolynomial,
-        publicKeys: Group[],
-        keyId: Field
-    ): Round2Contribution {
-        let data = new Array<Round2Data>(this.N);
-        for (let i = 0; i < this.N; i++) {
-            if (i + 1 == Number(this.index)) {
-                data[i].U = Group.zero;
-                data[i].c = Field(0);
-            } else {
-                let encryption = ElgamalECC.encrypt(
-                    secret.f[i],
-                    PublicKey.fromGroup(publicKeys[i])
-                );
-                data[i].U = encryption.U;
-                data[i].c = encryption.c;
-            }
-        }
-        return new Round2Contribution({
-            data: data,
-            witness: new (getMerkleWitnessType(ROUND_2_CONTRIBUTION_DEPTH))(
-                dummyWitness
-            ),
-            keyId: keyId,
-        });
-    }
-
-    getTallyContribution(
-        secret: SecretPolynomial,
-        privateKey: PrivateKey,
-        round2Data: Round2Data[],
-        R: Group[],
-        keyId: Field
-    ) {
-        let decryptions: Field[] = round2Data.map(
-            (data) => ElgamalECC.decrypt(data.U, data.c, privateKey).m
-        );
-        let ski: Field = decryptions.reduce(
-            (prev: Field, curr: Field) => prev.add(curr),
-            secret.f[this.index]
-        );
-
-        let D = new Array<Group>(R.length);
-        for (let i = 0; i < R.length; i++) {
-            D[i] = R[i].scale(Scalar.fromFields(ski.toFields()));
-        }
-        return new TallyContribution({
-            D: D,
-            witness: new (getMerkleWitnessType(TALLY_CONTRIBUTION_DEPTH))(
-                dummyWitness
-            ),
-            keyId: keyId,
-        });
-    }
-
-    getLagrangeCoefficient(listIndex: number[]): Field[] {
-        let lagrangeCoefficient = new Array<Field>(this.T);
-        for (let i = 0; i < this.T; i++) {
-            let indexI = listIndex[i];
-            let numerator = Field(1);
-            let denominator = Field(1);
-            for (let j = 0; j < this.T; j++) {
-                let indexJ = listIndex[j];
-                if (indexI != indexJ) {
-                    numerator = numerator.mul(indexJ);
-                    denominator = denominator.mul(indexJ - indexI);
-                }
-            }
-
-            while (denominator.lessThan(Field(0))) {
-                denominator = denominator.add(Field.ORDER);
-            }
-            denominator = denominator.inv();
-            lagrangeCoefficient[i] = numerator.mul(denominator);
-        }
-        return lagrangeCoefficient;
-    }
-
-    // getResultVector(listIndex: number[], D: Group[], M: Group[]) {
-    //   let lagrangeCoefficient = this.getLagrangeCoefficient(listIndex);
-    //   let sumD = Array<Group>(M.length);
-    //   for (let i = 0; i < sumD.length; i++) {
-    //     sumD[i] = BabyJub.getZeroPoint();
-    //   }
-    //   for (let i = 0; i < threshold; i++) {
-    //     for (let j = 0; j < sumD.length; j++) {
-    //       sumD[j] = BabyJub.addPoint(
-    //         sumD[j],
-    //         BabyJub.mulPointEscalar(
-    //           Utils.getBigIntegerArray(D[i][j]),
-    //           lagrangeCoefficient[i]
-    //         )
-    //       );
-    //     }
-    //   }
-    // }
+  }
+  return { R: sumR, M: sumM };
 }
