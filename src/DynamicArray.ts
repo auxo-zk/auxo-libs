@@ -118,15 +118,15 @@ function DynamicArray<T>(type: Provable<T>, maxLength: number) {
       return newArr;
     }
 
-    // public insert(index: Field, value: T): void {
-    //   const arr1 = this.slice(Field(0), index);
-    //   const arr2 = this.slice(index, this.length);
-    //   arr2.shiftRight(Field(1));
-    //   arr2.set(Field(0), value);
-    //   const concatArr = arr1.concat(arr2);
-    //   this.values = concatArr.values;
-    //   this.length = concatArr.length;
-    // }
+    public insert(index: Field, value: T): void {
+      const arr1 = this.slice(Field(0), index);
+      const arr2 = this.slice(index, this.length);
+      arr2.shiftRight(Field(1));
+      arr2.set(Field(0), value);
+      const concatArr = arr1.concat(arr2);
+      this.values = concatArr.values;
+      this.length = concatArr.length;
+    }
 
     public includes(value: T): Bool {
       let result = Field(0);
