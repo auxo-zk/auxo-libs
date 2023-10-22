@@ -28,6 +28,7 @@ export {
   getTallyContribution,
   getLagrangeCoefficient,
   getResultVector,
+  encryptVector,
   accumulateEncryption,
 };
 
@@ -93,20 +94,24 @@ function getRound1Contribution(secret: SecretPolynomial): Round1Contribution {
 function getRound2Contribution(
   secret: SecretPolynomial,
   index: number,
-  publicKeys: PublicKey[]
+  round1Contributions: Round1Contribution[]
 ): Round2Contribution {
   let data = new Array<Round2Data>(secret.f.length);
   for (let i = 0; i < data.length; i++) {
-    if (i + 1 == Number(index)) {
-      data[i].U = Group.zero;
-      data[i].c = 0n;
+    if (i + 1 == index) {
+      data[i] = {
+        U: Group.zero,
+        c: 0n,
+      };
     } else {
       let encryption = ElgamalECC.encrypt(
         secret.f[i].toBigInt(),
-        publicKeys[i]
+        PublicKey.fromGroup(round1Contributions[i].C[0])
       );
-      data[i].U = encryption.U;
-      data[i].c = encryption.c;
+      data[i] = {
+        U: encryption.U,
+        c: encryption.c,
+      };
     }
   }
   return { data };
@@ -117,7 +122,7 @@ function getTallyContribution(
   index: number,
   round2Data: Round2Data[],
   R: Group[]
-) {
+): TallyContribution {
   let decryptions: Scalar[] = round2Data.map((data) =>
     Scalar.from(
       ElgamalECC.decrypt(
@@ -180,12 +185,38 @@ function getResultVector(
   return result;
 }
 
+function encryptVector(
+  publicKey: PublicKey,
+  vector: bigint[]
+): {
+  r: Scalar[];
+  R: Group[];
+  M: Group[];
+} {
+  let dimension = vector.length;
+  let r = new Array<Scalar>(dimension);
+  let R = new Array<Group>(dimension);
+  let M = new Array<Group>(dimension);
+  for (let i = 0; i < dimension; i++) {
+    let random = Scalar.random();
+    r[i] = random;
+    R[i] = Group.generator.scale(random);
+    M[i] =
+      vector[i] > 0n
+        ? Group.generator
+            .scale(Scalar.from(vector[i]))
+            .add(publicKey.toGroup().scale(random))
+        : Group.zero.add(publicKey.toGroup().scale(random));
+  }
+  return { r, R, M };
+}
+
 function accumulateEncryption(
   R: Group[][],
-  M: Group[][],
-  quantity: number,
-  dimension: number
-): { R: Group[]; M: Group[] } {
+  M: Group[][]
+): { sumR: Group[]; sumM: Group[] } {
+  let quantity = R.length;
+  let dimension = R[0].length ?? 0;
   let sumR = new Array<Group>(dimension);
   let sumM = new Array<Group>(dimension);
   sumR.fill(Group.zero);
@@ -197,5 +228,5 @@ function accumulateEncryption(
       sumM[j] = sumM[j].add(M[i][j]);
     }
   }
-  return { R: sumR, M: sumM };
+  return { sumR, sumM };
 }
