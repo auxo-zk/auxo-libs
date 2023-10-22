@@ -1,9 +1,11 @@
 import {
   Bool,
+  Circuit,
   Field,
   FlexibleProvable,
   Poseidon,
   Provable,
+  ProvablePure,
   Struct,
 } from 'o1js';
 
@@ -26,21 +28,16 @@ function hashable<T>(type: Provable<T>): HashableProvable<T> {
   };
 }
 
-function DynamicArray<T>(type: Provable<T>, maxLength: number) {
+function DynamicArray<T>(type: ProvablePure<T>, maxLength: number) {
   const _type = hashable(type);
-  function Null() {
-    return type.fromFields(
-      Array(type.sizeInFields()).fill(Field(0)),
-      type.toAuxiliary()
-    );
-  }
+
   return class _DynamicArray extends Struct({
     length: Field,
-    values: Provable.Array(type, maxLength) as Provable<T[]>,
+    values: Provable.Array(type, maxLength),
   }) {
-    static from(values: T[]): _DynamicArray {
-      return new _DynamicArray(values);
-    }
+    // static from(values: T[]): _DynamicArray {
+    //   return new _DynamicArray(values);
+    // }
 
     static empty(length?: Field): _DynamicArray {
       const arr = new _DynamicArray();
@@ -48,9 +45,20 @@ function DynamicArray<T>(type: Provable<T>, maxLength: number) {
       return arr;
     }
 
+    static Null(): T {
+      return type.fromFields(Array(type.sizeInFields()).fill(Field(0)));
+    }
+
+    static fillWithNull(values: T[], length: number): T[] {
+      for (let i = values.length; i < length; i++) {
+        values[i] = _DynamicArray.Null();
+      }
+      return values;
+    }
+
     public constructor(values?: T[]) {
       super({
-        values: fillWithNull(values ?? [], maxLength),
+        values: _DynamicArray.fillWithNull(values ?? [], maxLength),
         length: values === undefined ? Field(0) : Field(values.length),
       });
     }
@@ -70,6 +78,10 @@ function DynamicArray<T>(type: Provable<T>, maxLength: number) {
       }
     }
 
+    public toFields(): Field[] {
+      return this.values.map((v) => type.toFields(v)).flat();
+    }
+
     public push(value: T): void {
       this.incrementLength(Field(1));
       this.set(this.length.sub(1), value);
@@ -82,7 +94,7 @@ function DynamicArray<T>(type: Provable<T>, maxLength: number) {
       for (let i = 0; i < this.maxLength(); i++) {
         this.values[i] = Provable.switch([mask[i], mask[i].not()], type, [
           this.values[i],
-          Null(),
+          _DynamicArray.Null(),
         ]);
       }
     }
@@ -255,17 +267,10 @@ function DynamicArray<T>(type: Provable<T>, maxLength: number) {
           masked,
           type,
           fn(newArr.values[i], Field(i)),
-          Null()
+          _DynamicArray.Null()
         );
       }
       return newArr;
     }
   };
-
-  function fillWithNull([...values]: T[], length: number): T[] {
-    for (let i = values.length; i < length; i++) {
-      values[i] = Null();
-    }
-    return values;
-  }
 }
