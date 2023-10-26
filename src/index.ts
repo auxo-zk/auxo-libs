@@ -1,3 +1,10 @@
-import { Add } from './Add.js';
+import * as CommitteeMember from './CommitteeMember';
+import * as DynamicArray from './DynamicArray';
+import * as ElgamalECC from './Elgamal';
 
-export { Add };
+export { CommitteeMember, DynamicArray, ElgamalECC };
+// module.exports = {
+//     CommitteeMember: CommitteeMember,
+//     DynamicArray: DynamicArray,
+//     ElgamalECC: ElgamalECC,
+// };

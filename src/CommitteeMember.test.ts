@@ -22,7 +22,7 @@ describe('CommitteeMember', () => {
     let sumR: Group[] = [];
     let sumM: Group[] = [];
     let D: Group[][] = [];
-    let listIndex = [1, 2, 3];
+    let listIndex = [1, 4, 5];
     const plainVectors = [
         [1000n, 0n, 0n],
         [0n, 1000n, 0n],

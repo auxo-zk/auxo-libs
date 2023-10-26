@@ -8,7 +8,9 @@
         "mina-zkapp",
         "mina-zk-app",
         "mina-dapp",
-        "zkapp"
+        "zkapp",
+        "dkg",
+        "cryptography"
     ],
     "type": "module",
     "main": "build/src/index.js",
