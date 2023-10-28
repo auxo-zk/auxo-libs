@@ -1,18 +1,7 @@
-import {
-    Bool,
-    Encryption,
-    Field,
-    Group,
-    MerkleWitness,
-    Poseidon,
-    PrivateKey,
-    Provable,
-    PublicKey,
-    Scalar,
-    Struct,
-    UInt32,
-} from 'o1js';
-import * as ElgamalECC from './Elgamal';
+import { Group, PrivateKey, PublicKey, Scalar, Struct } from 'o1js';
+import * as ElgamalECC from '../utils/Elgamal.js';
+import { DynamicArray } from '../utils/DynamicArray.js';
+import { CustomScalar } from '../utils/CustomScalar.js';
 
 export {
     SecretPolynomial,
@@ -28,9 +17,10 @@ export {
     getTallyContribution,
     getLagrangeCoefficient,
     getResultVector,
-    encryptVector,
-    accumulateEncryption,
 };
+
+const GroupDynamicArray = DynamicArray(Group, 32);
+const ScalarDynamicArray = DynamicArray(CustomScalar, 32);
 
 type SecretPolynomial = {
     a: Scalar[];
@@ -38,29 +28,30 @@ type SecretPolynomial = {
     f: Scalar[];
 };
 
-type Round1Contribution = {
-    C: Group[];
-};
-
 type Round2Data = {
-    c: bigint;
+    c: Scalar;
     U: Group;
 };
 
-type Round2Contribution = {
-    data: Round2Data[];
-};
+class Round1Contribution extends Struct({
+    C: GroupDynamicArray,
+}) {}
 
-type TallyContribution = {
-    D: Group[];
-};
+class Round2Contribution extends Struct({
+    c: ScalarDynamicArray,
+    U: GroupDynamicArray,
+}) {}
+
+class TallyContribution extends Struct({
+    D: GroupDynamicArray,
+}) {}
 
 function calculatePublicKey(
     round1Contributions: Round1Contribution[]
 ): PublicKey {
     let result = Group.zero;
     for (let i = 0; i < round1Contributions.length; i++) {
-        result = result.add(round1Contributions[i].C[0]);
+        result = result.add(round1Contributions[i].C.values[0]);
     }
     return PublicKey.fromGroup(result);
 }
@@ -88,7 +79,8 @@ function generateRandomPolynomial(T: number, N: number): SecretPolynomial {
 }
 
 function getRound1Contribution(secret: SecretPolynomial): Round1Contribution {
-    return { C: secret.C };
+    let provableC = GroupDynamicArray.from(secret.C);
+    return { C: provableC };
 }
 
 function getRound2Contribution(
@@ -97,24 +89,26 @@ function getRound2Contribution(
     round1Contributions: Round1Contribution[]
 ): Round2Contribution {
     let data = new Array<Round2Data>(secret.f.length);
+    let c = new Array<Scalar>(secret.f.length);
+    let U = new Array<Group>(secret.f.length);
     for (let i = 0; i < data.length; i++) {
         if (i + 1 == index) {
-            data[i] = {
-                U: Group.zero,
-                c: 0n,
-            };
+            c[i] = Scalar.from(0n);
+            U[i] = Group.zero;
         } else {
             let encryption = ElgamalECC.encrypt(
                 secret.f[i].toBigInt(),
-                PublicKey.fromGroup(round1Contributions[i].C[0])
+                PublicKey.fromGroup(round1Contributions[i].C.values[0])
             );
-            data[i] = {
-                U: encryption.U,
-                c: encryption.c,
-            };
+            c[i] = Scalar.from(encryption.c);
+            U[i] = encryption.U;
         }
     }
-    return { data };
+    let provablec = ScalarDynamicArray.from(
+        c.map((e) => CustomScalar.fromScalar(e))
+    );
+    let provableU = GroupDynamicArray.from(U);
+    return { c: provablec, U: provableU };
 }
 
 function getTallyContribution(
@@ -126,7 +120,7 @@ function getTallyContribution(
     let decryptions: Scalar[] = round2Data.map((data) =>
         Scalar.from(
             ElgamalECC.decrypt(
-                data.c,
+                data.c.toBigInt(),
                 data.U,
                 PrivateKey.fromBigInt(secret.a[0].toBigInt())
             ).m
@@ -141,7 +135,7 @@ function getTallyContribution(
     for (let i = 0; i < R.length; i++) {
         D[i] = R[i].scale(ski);
     }
-    return { D };
+    return { D: GroupDynamicArray.from(D) };
 }
 
 function getLagrangeCoefficient(listIndex: number[]): Scalar[] {
@@ -183,50 +177,4 @@ function getResultVector(
         result[i] = M[i].sub(sumD[i]);
     }
     return result;
-}
-
-function encryptVector(
-    publicKey: PublicKey,
-    vector: bigint[]
-): {
-    r: Scalar[];
-    R: Group[];
-    M: Group[];
-} {
-    let dimension = vector.length;
-    let r = new Array<Scalar>(dimension);
-    let R = new Array<Group>(dimension);
-    let M = new Array<Group>(dimension);
-    for (let i = 0; i < dimension; i++) {
-        let random = Scalar.random();
-        r[i] = random;
-        R[i] = Group.generator.scale(random);
-        M[i] =
-            vector[i] > 0n
-                ? Group.generator
-                      .scale(Scalar.from(vector[i]))
-                      .add(publicKey.toGroup().scale(random))
-                : Group.zero.add(publicKey.toGroup().scale(random));
-    }
-    return { r, R, M };
-}
-
-function accumulateEncryption(
-    R: Group[][],
-    M: Group[][]
-): { sumR: Group[]; sumM: Group[] } {
-    let quantity = R.length;
-    let dimension = R[0].length ?? 0;
-    let sumR = new Array<Group>(dimension);
-    let sumM = new Array<Group>(dimension);
-    sumR.fill(Group.zero);
-    sumM.fill(Group.zero);
-
-    for (let i = 0; i < quantity; i++) {
-        for (let j = 0; j < dimension; j++) {
-            sumR[j] = sumR[j].add(R[i][j]);
-            sumM[j] = sumM[j].add(M[i][j]);
-        }
-    }
-    return { sumR, sumM };
 }

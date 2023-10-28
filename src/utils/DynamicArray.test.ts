@@ -3,6 +3,7 @@ import {
     FlexibleProvable,
     FlexibleProvablePure,
     Group,
+    Mina,
     Provable,
     Reducer,
     Scalar,
@@ -10,12 +11,18 @@ import {
     Struct,
 } from 'o1js';
 import { DynamicArray } from './DynamicArray';
+import { CustomScalar } from './CustomScalar';
+import {
+    Round1Contribution,
+    Round2Contribution,
+    TallyContribution,
+} from '../dkg/Committee';
 
 describe('DynamicArray', () => {
     const MAX_HEIGHT = 2 ** 5;
     class DynamicFieldArray extends DynamicArray(Field, MAX_HEIGHT) {}
     class DynamicGroupArray extends DynamicArray(Group, MAX_HEIGHT) {}
-    class DynamicScalarArray extends DynamicArray(Scalar, MAX_HEIGHT) {}
+    class DynamicScalarArray extends DynamicArray(CustomScalar, MAX_HEIGHT) {}
 
     it('Should be provable', async () => {
         Provable.runAndCheck(() => {
@@ -42,21 +49,16 @@ describe('DynamicArray', () => {
             Provable.log(groupArray);
 
             // Scalar - Not working because Scalar takes up 255 Fields => Stack overflow
-            // let scalarValues = Provable.Array(Scalar, 1).fromFields(
-            //   Scalar.from(Scalar.ORDER).toFields()
-            // );
-            // let scalarArray = Provable.witness(
-            //   DynamicScalarArray,
-            //   () => new DynamicScalarArray(scalarValues)
-            // );
+            let scalarValues = Provable.Array(CustomScalar, 1).fromFields(
+                CustomScalar.fromScalar(Scalar.random()).toFields()
+            );
+            Provable.log(scalarValues);
+            let scalarArray = Provable.witness(
+                DynamicScalarArray,
+                () => new DynamicScalarArray(scalarValues)
+            );
             // Provable.log(Scalar.sizeInFields());
-            // Provable.log(scalarArray);
+            Provable.log(scalarArray);
         });
-    });
-
-    xit('Should be used in Smart Contract', async () => {
-        class Test extends SmartContract {
-            reducer = Reducer({ actionType: DynamicFieldArray });
-        }
     });
 });

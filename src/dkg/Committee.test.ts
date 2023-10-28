@@ -1,10 +1,22 @@
-import { Field, Group, Provable, PrivateKey, PublicKey, Scalar } from 'o1js';
-import * as Committee from './CommitteeMember';
+import {
+    Field,
+    Group,
+    method,
+    Provable,
+    PrivateKey,
+    PublicKey,
+    Scalar,
+    SmartContract,
+    state,
+    State,
+    Reducer,
+} from 'o1js';
+import * as Committee from './Committee.js';
+import * as Requestor from './Requestor.js';
 
-describe('CommitteeMember', () => {
+describe('Committee', () => {
     let T = 3;
     let N = 5;
-    let keyId = Field(0);
     let committees: {
         privateKey: PrivateKey;
         index: number;
@@ -35,12 +47,6 @@ describe('CommitteeMember', () => {
     beforeAll(async () => {
         for (let i = 0; i < N; i++) {
             let privateKey = PrivateKey.random();
-            // let committeeMember = {
-            //   publicKey: privateKey.toPublicKey(),
-            //   index: i + 1,
-            //   round1Contribution: undefined,
-            //   round2Contribution: undefined,
-            // };
             let secretPolynomial = Committee.generateRandomPolynomial(T, N);
             committees.push({
                 privateKey: privateKey,
@@ -59,6 +65,7 @@ describe('CommitteeMember', () => {
             );
             committees[i].round1Contribution = round1Contribution;
             round1Contributions.push(round1Contribution);
+            Provable.runAndCheck(() => round1Contribution);
         }
         publicKey = Committee.calculatePublicKey(round1Contributions);
         // Provable.log(publicKey);
@@ -74,6 +81,7 @@ describe('CommitteeMember', () => {
             );
             committees[i].round2Contribution = round2Contribution;
             round2Contributions.push(round2Contribution);
+            Provable.runAndCheck(() => round2Contribution);
         }
         // Provable.log(round2Contributions);
         // round2Contributions.map((e) => console.log(e.data));
@@ -81,7 +89,7 @@ describe('CommitteeMember', () => {
 
     it('Should accumulate encryption', async () => {
         for (let i = 0; i < plainVectors.length; i++) {
-            let encryptedVector = Committee.encryptVector(
+            let encryptedVector = Requestor.generateEncryption(
                 Committee.calculatePublicKey(round1Contributions),
                 plainVectors[i]
             );
@@ -89,7 +97,7 @@ describe('CommitteeMember', () => {
             M.push(encryptedVector.M);
         }
 
-        let accumulatedEncryption = Committee.accumulateEncryption(R, M);
+        let accumulatedEncryption = Requestor.accumulateEncryption(R, M);
         sumR = accumulatedEncryption.sumR;
         sumM = accumulatedEncryption.sumM;
         // Provable.log(sumR, sumM);
@@ -103,7 +111,15 @@ describe('CommitteeMember', () => {
                     index == committees[listIndex[i] - 1].index - 1
                         ? prev
                         : round2Data.push(
-                              curr.data[committees[listIndex[i] - 1].index - 1]
+                              {
+                                  c: curr.c.values[
+                                      committees[listIndex[i] - 1].index - 1
+                                  ].toScalar(),
+                                  U: curr.U.values[
+                                      committees[listIndex[i] - 1].index - 1
+                                  ],
+                              }
+                              //   curr.data[committees[listIndex[i] - 1].index - 1]
                           ),
                 {}
             );
@@ -113,9 +129,10 @@ describe('CommitteeMember', () => {
                 round2Data,
                 sumR
             );
+            Provable.runAndCheck(() => tallyContribution);
             committees[listIndex[i] - 1].tallyContribution = tallyContribution;
             tallyContributions.push(tallyContribution);
-            D.push(tallyContribution.D);
+            D.push(tallyContribution.D.values.slice(0, T));
         }
         // Provable.log(tallyContributions);
         // tallyContributions.map((e) => Provable.log(e.D));
@@ -131,5 +148,41 @@ describe('CommitteeMember', () => {
             expect(resultVector[i].x).toEqual(point.x);
             expect(resultVector[i].y).toEqual(point.y);
         }
+    });
+
+    it('Should be used in Smart Contract', async () => {
+        class TestRound1Contribution extends SmartContract {
+            reducer = Reducer({ actionType: Committee.Round1Contribution });
+            @state(Field) keyId = State<Field>();
+            @method test(): Field {
+                return Field(0);
+            }
+        }
+
+        class TestRound2Contribution extends SmartContract {
+            reducer = Reducer({ actionType: Committee.Round2Contribution });
+            @state(Field) keyId = State<Field>();
+            @method test(): Field {
+                return Field(0);
+            }
+        }
+
+        class TestTallyContribution extends SmartContract {
+            reducer = Reducer({ actionType: Committee.TallyContribution });
+            @state(Field) keyId = State<Field>();
+            @method test(): Field {
+                return Field(0);
+            }
+        }
+
+        console.log('Compile test round 1...');
+        await TestRound1Contribution.compile();
+        console.log('DONE!');
+        console.log('Compile test round 2...');
+        await TestRound2Contribution.compile();
+        console.log('DONE!');
+        console.log('Compile test tally...');
+        await TestTallyContribution.compile();
+        console.log('DONE!');
     });
 });

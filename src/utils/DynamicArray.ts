@@ -35,9 +35,9 @@ function DynamicArray<T>(type: ProvablePure<T>, maxLength: number) {
         length: Field,
         values: Provable.Array(type, maxLength),
     }) {
-        // static from(values: T[]): _DynamicArray {
-        //   return new _DynamicArray(values);
-        // }
+        static from(values: T[]): _DynamicArray {
+            return new _DynamicArray(values);
+        }
 
         static empty(length?: Field): _DynamicArray {
             const arr = new _DynamicArray();
