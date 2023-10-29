@@ -1,4 +1,12 @@
-import { Group, PrivateKey, PublicKey, Scalar, Struct } from 'o1js';
+import {
+    Field,
+    Group,
+    Poseidon,
+    PrivateKey,
+    PublicKey,
+    Scalar,
+    Struct,
+} from 'o1js';
 import * as ElgamalECC from '../utils/Elgamal.js';
 import { DynamicArray } from '../utils/DynamicArray.js';
 import { CustomScalar } from '../utils/CustomScalar.js';
@@ -35,16 +43,40 @@ type Round2Data = {
 
 class Round1Contribution extends Struct({
     C: GroupDynamicArray,
-}) {}
+}) {
+    toFields(): Field[] {
+        return this.C.toFields();
+    }
+
+    hash(): Field {
+        return Poseidon.hash(this.toFields());
+    }
+}
 
 class Round2Contribution extends Struct({
     c: ScalarDynamicArray,
     U: GroupDynamicArray,
-}) {}
+}) {
+    toFields(): Field[] {
+        return this.c.toFields().concat(this.U.toFields());
+    }
+
+    hash(): Field {
+        return Poseidon.hash(this.toFields());
+    }
+}
 
 class TallyContribution extends Struct({
     D: GroupDynamicArray,
-}) {}
+}) {
+    toFields(): Field[] {
+        return this.D.toFields();
+    }
+
+    hash(): Field {
+        return Poseidon.hash(this.toFields());
+    }
+}
 
 function calculatePublicKey(
     round1Contributions: Round1Contribution[]
@@ -80,7 +112,7 @@ function generateRandomPolynomial(T: number, N: number): SecretPolynomial {
 
 function getRound1Contribution(secret: SecretPolynomial): Round1Contribution {
     let provableC = GroupDynamicArray.from(secret.C);
-    return { C: provableC };
+    return new Round1Contribution({ C: provableC });
 }
 
 function getRound2Contribution(
@@ -108,7 +140,7 @@ function getRound2Contribution(
         c.map((e) => CustomScalar.fromScalar(e))
     );
     let provableU = GroupDynamicArray.from(U);
-    return { c: provablec, U: provableU };
+    return new Round2Contribution({ c: provablec, U: provableU });
 }
 
 function getTallyContribution(
@@ -135,7 +167,7 @@ function getTallyContribution(
     for (let i = 0; i < R.length; i++) {
         D[i] = R[i].scale(ski);
     }
-    return { D: GroupDynamicArray.from(D) };
+    return new TallyContribution({ D: GroupDynamicArray.from(D) });
 }
 
 function getLagrangeCoefficient(listIndex: number[]): Scalar[] {
