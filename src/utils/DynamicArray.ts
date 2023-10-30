@@ -1,15 +1,43 @@
 import {
     Bool,
-    Circuit,
     Field,
-    FlexibleProvable,
+    Group,
     Poseidon,
     Provable,
     ProvablePure,
+    PublicKey,
     Struct,
 } from 'o1js';
+import { CustomScalar } from './CustomScalar';
 
-export { DynamicArray };
+export {
+    DynamicArray,
+    BoolDynamicArray,
+    FieldDynamicArray,
+    GroupDynamicArray,
+    ScalarDynamicArray,
+    PublicKeyDynamicArray,
+};
+
+function BoolDynamicArray(maxLength: number) {
+    return DynamicArray(Bool, maxLength);
+}
+
+function FieldDynamicArray(maxLength: number) {
+    return DynamicArray(Field, maxLength);
+}
+
+function GroupDynamicArray(maxLength: number) {
+    return DynamicArray(Group, maxLength);
+}
+
+function ScalarDynamicArray(maxLength: number) {
+    return DynamicArray(CustomScalar, maxLength);
+}
+
+function PublicKeyDynamicArray(maxLength: number) {
+    return DynamicArray(PublicKey, maxLength);
+}
 
 type HashableProvable<T> = Provable<T> & {
     hash(x: T): Field;
