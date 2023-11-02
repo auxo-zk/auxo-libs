@@ -44,6 +44,12 @@ type Round2Data = {
 class Round1Contribution extends Struct({
     C: GroupDynamicArray,
 }) {
+    static empty(): Round1Contribution {
+        return new Round1Contribution({
+            C: new GroupDynamicArray(),
+        });
+    }
+
     toFields(): Field[] {
         return this.C.toFields();
     }
@@ -52,11 +58,17 @@ class Round1Contribution extends Struct({
         return Poseidon.hash(this.toFields());
     }
 }
-
 class Round2Contribution extends Struct({
     c: ScalarDynamicArray,
     U: GroupDynamicArray,
 }) {
+    static empty(): Round2Contribution {
+        return new Round2Contribution({
+            c: new ScalarDynamicArray(),
+            U: new GroupDynamicArray(),
+        });
+    }
+
     toFields(): Field[] {
         return this.c.toFields().concat(this.U.toFields());
     }
@@ -69,6 +81,12 @@ class Round2Contribution extends Struct({
 class TallyContribution extends Struct({
     D: GroupDynamicArray,
 }) {
+    static empty(): TallyContribution {
+        return new TallyContribution({
+            D: new GroupDynamicArray(),
+        });
+    }
+
     toFields(): Field[] {
         return this.D.toFields();
     }

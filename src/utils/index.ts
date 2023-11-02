@@ -1,5 +1,21 @@
 import { CustomScalar } from './CustomScalar.js';
-import { DynamicArray } from './DynamicArray.js';
 import * as Elgamal from './Elgamal.js';
+import {
+    DynamicArray,
+    BoolDynamicArray,
+    FieldDynamicArray,
+    GroupDynamicArray,
+    ScalarDynamicArray,
+    PublicKeyDynamicArray,
+} from './DynamicArray.js';
 
-export { CustomScalar, DynamicArray, Elgamal };
+export {
+    CustomScalar,
+    Elgamal,
+    DynamicArray,
+    BoolDynamicArray,
+    FieldDynamicArray,
+    GroupDynamicArray,
+    ScalarDynamicArray,
+    PublicKeyDynamicArray,
+};
