@@ -1,4 +1,4 @@
-import { Field, Scalar, Struct } from 'o1js';
+import { Bool, Field, Poseidon, Scalar, Struct } from 'o1js';
 
 export class CustomScalar extends Struct({
     head: Field,
@@ -6,15 +6,10 @@ export class CustomScalar extends Struct({
 }) {
     static fromScalar(scalar: Scalar): CustomScalar {
         let bits = scalar.toFields().map((e) => e.toBits()[0]);
-        // console.log('Bits:', bits);
         return new CustomScalar({
             head: Field.fromBits(bits.slice(0, 127)),
             tail: Field.fromBits(bits.slice(127)),
         });
-        // return new CustomScalar({
-        //     head: Field(0),
-        //     tail: Field(0),
-        // });
     }
 
     static fromFields(fields: Field[]): CustomScalar {
@@ -39,6 +34,14 @@ export class CustomScalar extends Struct({
 
     static sizeInFields(): number {
         return 2;
+    }
+
+    hash(): Field {
+        return Poseidon.hash(this.toScalar().toFields());
+    }
+
+    equals(s: CustomScalar): Bool {
+        return this.head.equals(s.head).and(this.tail.equals(s.tail));
     }
 
     toScalar(): Scalar {

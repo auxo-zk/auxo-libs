@@ -8,6 +8,7 @@ import {
     PublicKey,
     Struct,
 } from 'o1js';
+
 import { CustomScalar } from './CustomScalar';
 
 export {
@@ -56,7 +57,10 @@ function hashable<T>(type: Provable<T>): HashableProvable<T> {
     };
 }
 
-function DynamicArray<T>(type: ProvablePure<T>, maxLength: number) {
+export default function DynamicArray<T>(
+    type: ProvablePure<T>,
+    maxLength: number
+) {
     const _type = hashable(type);
 
     return class _DynamicArray extends Struct({
@@ -73,15 +77,20 @@ function DynamicArray<T>(type: ProvablePure<T>, maxLength: number) {
             return arr;
         }
 
+        static hash(value: T): Field {
+            return Poseidon.hash(type.toFields(value));
+        }
+
         static Null(): T {
             return type.fromFields(Array(type.sizeInFields()).fill(Field(0)));
         }
 
         static fillWithNull(values: T[], length: number): T[] {
+            let tempValues = [...values];
             for (let i = values.length; i < length; i++) {
-                values[i] = _DynamicArray.Null();
+                tempValues[i] = _DynamicArray.Null();
             }
-            return values;
+            return tempValues;
         }
 
         public constructor(values?: T[]) {
@@ -254,12 +263,13 @@ function DynamicArray<T>(type: ProvablePure<T>, maxLength: number) {
 
         public indexMask(index: Field): Bool[] {
             const mask = [];
-            let lengthReached = Bool(false);
+            // let lengthReached = Bool(false);
             for (let i = 0; i < this.maxLength(); i++) {
-                lengthReached = Field(i).equals(this.length).or(lengthReached);
+                // lengthReached = Field(i).equals(this.length).or(lengthReached);
                 const isIndex = Field(i).equals(index);
                 // assert index < length
-                isIndex.and(lengthReached).not().assertTrue();
+                // isIndex.and(lengthReached).not().assertTrue();
+                // no more, assert index < length, if index < length then return type null()
                 mask[i] = isIndex;
             }
             return mask;
