@@ -25,11 +25,11 @@ describe('CustomScalar', () => {
     expect(bitStringXor2.toBigInt()).toEqual(bigIntXor2);
   });
 
-  // FIXME - not working
-  xit('Should convert to bigint correctly', async () => {
-    // let r = Scalar.random();
-    let r = Scalar.from(1n);
+  // FIXME - not preserving Scalar's constant value
+  it('Should convert between bigint correctly', async () => {
+    let r = Scalar.random();
     let bitString = Bit255.fromScalar(r);
-    expect(bitString.toBigInt()).toEqual(r.toBigInt());
+    expect(Bit255.fromBigInt(r.toBigInt()).toBigInt()).toEqual(r.toBigInt());
+    expect(Bit255.fromBigInt(bitString.toBigInt())).toEqual(bitString);
   });
 });

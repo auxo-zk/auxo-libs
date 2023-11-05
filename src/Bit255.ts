@@ -35,6 +35,25 @@ export class Bit255 extends Struct({
     });
   }
 
+  static fromBits(bits: Bool[]): Bit255 {
+    if (bits.length !== 255) throw new Error('Invalid input length');
+    return new Bit255({
+      head: Field.fromBits(bits.slice(0, 127)),
+      tail: Field.fromBits(bits.slice(127)),
+    });
+  }
+
+  static fromBigInt(i: bigint): Bit255 {
+    let bits = new Array<Bool>(255).fill(Bool(false));
+    let index = 0;
+    while (i > 0) {
+      bits[index] = Bool(i % 2n == 1n);
+      i = i / 2n;
+      index += 1;
+    }
+    return Bit255.fromBits(bits);
+  }
+
   static toBigInt(b: Bit255): bigint {
     let bits = b.head
       .toBits()
