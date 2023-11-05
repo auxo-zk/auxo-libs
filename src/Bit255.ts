@@ -1,5 +1,6 @@
-import { Bool, Field, Gadgets, Poseidon, Scalar, Struct } from 'o1js';
+import { Bool, Field, Gadgets, Poseidon, Provable, Scalar, Struct } from 'o1js';
 
+// FIXME - Convert between Scalar and Bit255 does not preserve bigint value
 export class Bit255 extends Struct({
   head: Field,
   tail: Field,
@@ -30,8 +31,20 @@ export class Bit255 extends Struct({
   static xor(a: Bit255, b: Bit255): Bit255 {
     return new Bit255({
       head: Gadgets.xor(a.head, b.head, 127),
-      tail: Gadgets.xor(a.tail, b.tail, 126),
+      tail: Gadgets.xor(a.tail, b.tail, 128),
     });
+  }
+
+  static toBigInt(b: Bit255): bigint {
+    let bits = b.head
+      .toBits()
+      .slice(0, 127)
+      .concat(b.tail.toBits().slice(0, 128));
+    let res = 0n;
+    for (let i = 0; i < 255; i++) {
+      if (bits[i].toBoolean()) res += BigInt(Math.pow(2, i));
+    }
+    return res;
   }
 
   equals(b: Bit255): Bool {
@@ -57,5 +70,9 @@ export class Bit255 extends Struct({
 
   xor(b: Bit255): Bit255 {
     return Bit255.xor(this, b);
+  }
+
+  toBigInt(): bigint {
+    return Bit255.toBigInt(this);
   }
 }
