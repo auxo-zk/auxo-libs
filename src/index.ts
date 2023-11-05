@@ -1,4 +1,21 @@
-import * as DKG from './dkg/index.js';
-import * as Utils from './utils/index.js';
+import { Bit255 } from './Bit255.js';
+import { CustomScalar } from './CustomScalar.js';
+import {
+  DynamicArray,
+  BoolDynamicArray,
+  FieldDynamicArray,
+  GroupDynamicArray,
+  ScalarDynamicArray,
+  PublicKeyDynamicArray,
+} from './DynamicArray.js';
 
-export { DKG, Utils };
+export {
+  Bit255,
+  CustomScalar,
+  DynamicArray,
+  BoolDynamicArray,
+  FieldDynamicArray,
+  GroupDynamicArray,
+  ScalarDynamicArray,
+  PublicKeyDynamicArray,
+};
