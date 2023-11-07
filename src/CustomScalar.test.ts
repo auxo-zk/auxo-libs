@@ -1,4 +1,4 @@
-import { PrivateKey, Provable, Scalar } from 'o1js';
+import { Scalar } from 'o1js';
 import { CustomScalar } from './CustomScalar';
 
 describe('CustomScalar', () => {
