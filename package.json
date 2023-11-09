@@ -1,6 +1,6 @@
 {
   "name": "@auxo-dev/auxo-libs",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "",
   "author": "",
   "license": "Apache-2.0",
@@ -48,6 +48,6 @@
   },
   "dependencies": {
     "big-integer": "^1.6.51",
-    "o1js": "^0.14.0"
+    "o1js": "^0.14.1"
   }
 }
