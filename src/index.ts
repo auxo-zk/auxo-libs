@@ -9,6 +9,7 @@ import {
   ScalarDynamicArray,
   PublicKeyDynamicArray,
 } from './DynamicArray.js';
+import { IPFSHash } from './IPFSHash.js';
 
 export {
   Bit255,
@@ -20,4 +21,5 @@ export {
   GroupDynamicArray,
   ScalarDynamicArray,
   PublicKeyDynamicArray,
+  IPFSHash,
 };
