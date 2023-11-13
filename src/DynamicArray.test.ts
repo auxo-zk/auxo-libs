@@ -20,7 +20,7 @@ describe('DynamicArray', () => {
         DynamicFieldArray,
         () => new DynamicFieldArray(fieldValues)
       );
-      Provable.log(fieldArray);
+      // Provable.log(fieldArray);
 
       // Group
       let groupValues = Provable.Array(Group, 1).fromFields(
@@ -30,19 +30,65 @@ describe('DynamicArray', () => {
         DynamicGroupArray,
         () => new DynamicGroupArray(groupValues)
       );
-      Provable.log(groupArray);
+      // Provable.log(groupArray);
 
-      // Scalar - Not working because Scalar takes up 255 Fields => Stack overflow
+      // Scalar
       let scalarValues = Provable.Array(CustomScalar, 1).fromFields(
         CustomScalar.fromScalar(Scalar.random()).toFields()
       );
-      Provable.log(scalarValues);
+      // Provable.log(scalarValues);
       let scalarArray = Provable.witness(
         DynamicScalarArray,
         () => new DynamicScalarArray(scalarValues)
       );
-      // Provable.log(Scalar.sizeInFields());
-      Provable.log(scalarArray);
+      // Provable.log(scalarArray);
     });
+  });
+
+  it('Should serialize correctly', async () => {
+    // Field
+    let fieldValues = [Field(0), Field(1), Field(2), Field(1)];
+    let fieldArray = new DynamicFieldArray(fieldValues);
+    let fieldSerialized = fieldArray.toFields();
+    let fieldDeserialized = DynamicFieldArray.fromFields(
+      [fieldArray.length, fieldSerialized].flat()
+    );
+    fieldDeserialized.length.assertEquals(fieldArray.length);
+    for (let i = 0; i < fieldArray.values.length; i++) {
+      (fieldDeserialized as DynamicFieldArray)
+        .get(Field(i))
+        .assertEquals(fieldArray.get(Field(i)));
+    }
+
+    // Group
+    let groupValues = [Group.generator, Group.zero, Group.generator];
+    let groupArray = new DynamicGroupArray(groupValues);
+    let groupSerialized = groupArray.toFields();
+    let groupDeserialized = DynamicGroupArray.fromFields(
+      [groupArray.length, groupSerialized].flat()
+    );
+    groupDeserialized.length.assertEquals(groupArray.length);
+    for (let i = 0; i < groupArray.values.length; i++) {
+      (groupDeserialized as DynamicGroupArray)
+        .get(Field(i))
+        .assertEquals(groupArray.get(Field(i)));
+    }
+
+    // Scalar
+    let scalarValues = [
+      CustomScalar.fromScalar(Scalar.random()),
+      CustomScalar.fromScalar(Scalar.random()),
+    ];
+    let scalarArray = new DynamicScalarArray(scalarValues);
+    let scalarSerialized = scalarArray.toFields();
+    let scalarDeserialized = DynamicScalarArray.fromFields(
+      [scalarArray.length, scalarSerialized].flat()
+    );
+    scalarDeserialized.length.assertEquals(scalarArray.length);
+    for (let i = 0; i < scalarArray.values.length; i++) {
+      (scalarDeserialized as DynamicScalarArray)
+        .get(Field(i))
+        .assertEquals(scalarArray.get(Field(i)));
+    }
   });
 });
