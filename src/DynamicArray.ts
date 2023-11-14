@@ -45,12 +45,27 @@ export function PublicKeyDynamicArray(maxLength: number) {
 
 export function DynamicArray<T>(type: ProvablePure<T>, maxLength: number) {
   const _type = hashable(type);
-
   return class _DynamicArray extends Struct({
     length: Field,
     values: Provable.Array(type, maxLength),
   }) {
     static from(values: T[]): _DynamicArray {
+      return new _DynamicArray(values);
+    }
+
+    static fromFields(fields: Field[]): _DynamicArray {
+      let length = fields[0];
+      let sizeInFields = type.sizeInFields();
+      let values: T[] = [];
+      Provable.asProver(() => {
+        for (let i = 0; i < Number(length); i++) {
+          values.push(
+            type.fromFields(
+              fields.slice(1 + sizeInFields * i, 1 + sizeInFields * (i + 1))
+            )
+          );
+        }
+      });
       return new _DynamicArray(values);
     }
 

@@ -55,9 +55,7 @@ describe('DynamicArray', () => {
     );
     fieldDeserialized.length.assertEquals(fieldArray.length);
     for (let i = 0; i < fieldArray.values.length; i++) {
-      (fieldDeserialized as DynamicFieldArray)
-        .get(Field(i))
-        .assertEquals(fieldArray.get(Field(i)));
+      fieldDeserialized.get(Field(i)).assertEquals(fieldArray.get(Field(i)));
     }
 
     // Group
@@ -69,9 +67,7 @@ describe('DynamicArray', () => {
     );
     groupDeserialized.length.assertEquals(groupArray.length);
     for (let i = 0; i < groupArray.values.length; i++) {
-      (groupDeserialized as DynamicGroupArray)
-        .get(Field(i))
-        .assertEquals(groupArray.get(Field(i)));
+      groupDeserialized.get(Field(i)).assertEquals(groupArray.get(Field(i)));
     }
 
     // Scalar
@@ -86,9 +82,7 @@ describe('DynamicArray', () => {
     );
     scalarDeserialized.length.assertEquals(scalarArray.length);
     for (let i = 0; i < scalarArray.values.length; i++) {
-      (scalarDeserialized as DynamicScalarArray)
-        .get(Field(i))
-        .assertEquals(scalarArray.get(Field(i)));
+      scalarDeserialized.get(Field(i)).assertEquals(scalarArray.get(Field(i)));
     }
   });
 });
