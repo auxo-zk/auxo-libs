@@ -1,6 +1,6 @@
 import { Field, Group, Provable, Scalar } from 'o1js';
-import { DynamicArray } from './DynamicArray';
-import { CustomScalar } from './CustomScalar';
+import { DynamicArray } from './DynamicArray.js';
+import { CustomScalar } from './CustomScalar.js';
 
 describe('DynamicArray', () => {
   const MAX_HEIGHT = 2 ** 5;

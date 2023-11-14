@@ -1,5 +1,5 @@
 import { Provable } from 'o1js';
-import { IPFSHash } from './IPFSHash';
+import { IPFSHash } from './IPFSHash.js';
 
 describe('DynamicArray', () => {
   it('Should be provable code', async () => {

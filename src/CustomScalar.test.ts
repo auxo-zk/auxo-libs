@@ -1,5 +1,5 @@
 import { Scalar } from 'o1js';
-import { CustomScalar } from './CustomScalar';
+import { CustomScalar } from './CustomScalar.js';
 
 describe('CustomScalar', () => {
   it('Should convert correctly', async () => {

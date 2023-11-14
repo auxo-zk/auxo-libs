@@ -1,5 +1,5 @@
 import { Scalar } from 'o1js';
-import { Bit255 } from './Bit255';
+import { Bit255 } from './Bit255.js';
 
 describe('CustomScalar', () => {
   it('Should xor correctly', async () => {
