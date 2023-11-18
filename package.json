@@ -1,6 +1,6 @@
 {
   "name": "@auxo-dev/auxo-libs",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "",
   "author": "",
   "license": "Apache-2.0",
@@ -15,7 +15,7 @@
   "main": "./build/esm/src/index.js",
   "types": "./build/types/src/index.d.ts",
   "scripts": {
-    "build": "tsc --build tsconfig.json tsconfig.cjs.json tsconfig.types.json",
+    "build": "tsc --build tsconfig.json tsconfig.cjs.json tsconfig.types.json && ./fix-export.sh",
     "build:common": "",
     "buildw": "tsc --watch",
     "coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
@@ -27,8 +27,10 @@
   },
   "exports": {
     "types": "./build/types/src/index.d.ts",
-    "require": "./build/cjs/src/index.js",
-    "import": "./build/esm/src/index.js",
+    "node": {
+      "require": "./build/cjs/src/index.js",
+      "import": "./build/esm/src/index.js"
+    },
     "default": "./build/esm/src/index.js"
   },
   "files": [
