@@ -1,7 +1,28 @@
-import { Scalar } from 'o1js';
+import { Provable, Reducer, Scalar, SmartContract, method } from 'o1js';
 import { Bit255 } from './Bit255.js';
 
 describe('CustomScalar', () => {
+  xit('Should be provable', async () => {
+    class TestBit255 extends SmartContract {
+      reducer = Reducer({ actionType: Bit255 });
+
+      @method
+      xor(a: Bit255, b: Bit255, c: Bit255) {
+        let res = Bit255.xor(a, b);
+        res.assertEquals(c);
+        res.assertEquals(
+          Bit255.fromScalar(
+            Provable.witness(Scalar, () =>
+              Scalar.from(Scalar.random().toBigInt())
+            )
+          )
+        );
+      }
+    }
+
+    await TestBit255.compile();
+  });
+
   it('Should xor correctly', async () => {
     let r1 = Scalar.random();
     let r2 = Scalar.random();
@@ -31,5 +52,11 @@ describe('CustomScalar', () => {
     let bitString = Bit255.fromScalar(r);
     expect(Bit255.fromBigInt(r.toBigInt()).toBigInt()).toEqual(r.toBigInt());
     expect(Bit255.fromBigInt(bitString.toBigInt())).toEqual(bitString);
+  });
+
+  it('Should convert between Scalar correctly', async () => {
+    let r = Scalar.random();
+    let converted = Bit255.fromScalar(r).toScalar();
+    expect(r.toBigInt()).toEqual(converted.toBigInt());
   });
 });

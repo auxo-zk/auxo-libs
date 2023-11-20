@@ -1,4 +1,5 @@
-import { Bool, Field, Gadgets, Poseidon, Scalar, Struct } from 'o1js';
+import { Bool, Field, Gadgets, Poseidon, Provable, Scalar, Struct } from 'o1js';
+import { CustomScalar } from './CustomScalar.js';
 
 // FIXME - Convert between Scalar and Bit255 does not preserve bigint value
 export class Bit255 extends Struct({
@@ -6,11 +7,18 @@ export class Bit255 extends Struct({
   tail: Field,
 }) {
   static fromScalar(scalar: Scalar): Bit255 {
-    let bits = scalar.toFields();
+    let bits = scalar.toFields().map((e) => Bool.fromFields([e]));
     return new Bit255({
-      head: Field.fromFields(bits.slice(0, 127)),
-      tail: Field.fromFields(bits.slice(127)),
+      head: Field.fromBits(bits.slice(0, 127)),
+      tail: Field.fromBits(bits.slice(127)),
     });
+  }
+
+  static toScalar(b: Bit255): Scalar {
+    return new CustomScalar({
+      head: b.head,
+      tail: b.tail,
+    }).toScalar();
   }
 
   static fromFields(fields: Field[]): Bit255 {
@@ -29,10 +37,13 @@ export class Bit255 extends Struct({
   }
 
   static xor(a: Bit255, b: Bit255): Bit255 {
-    return new Bit255({
-      head: Gadgets.xor(a.head, b.head, 127),
-      tail: Gadgets.xor(a.tail, b.tail, 128),
-    });
+    return Provable.witness(Bit255, () =>
+      Bit255.fromBigInt(a.toBigInt() ^ b.toBigInt())
+    );
+    // return new Bit255({
+    //   head: Gadgets.xor(a.head, b.head, 127),
+    //   tail: Gadgets.xor(a.tail, b.tail, 128),
+    // });
   }
 
   static fromBits(bits: Bool[]): Bit255 {
@@ -85,6 +96,10 @@ export class Bit255 extends Struct({
 
   toFields(): Field[] {
     return Bit255.toFields(this);
+  }
+
+  toScalar(): Scalar {
+    return Bit255.toScalar(this);
   }
 
   xor(b: Bit255): Bit255 {

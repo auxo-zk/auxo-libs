@@ -5,7 +5,7 @@ export class CustomScalar extends Struct({
   tail: Field,
 }) {
   static fromScalar(scalar: Scalar): CustomScalar {
-    let bits = scalar.toFields().map((e) => e.toBits()[0]);
+    let bits = scalar.toFields().map((e) => Bool.fromFields([e]));
     return new CustomScalar({
       head: Field.fromBits(bits.slice(0, 127)),
       tail: Field.fromBits(bits.slice(127)),
