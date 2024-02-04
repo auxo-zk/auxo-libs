@@ -2,7 +2,7 @@ import { Provable, Reducer, Scalar, SmartContract, method } from 'o1js';
 import { Bit255 } from './Bit255.js';
 
 describe('CustomScalar', () => {
-  xit('Should be provable', async () => {
+  it('Should be provable', async () => {
     class TestBit255 extends SmartContract {
       reducer = Reducer({ actionType: Bit255 });
 
