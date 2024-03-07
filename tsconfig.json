@@ -1,5 +1,6 @@
 {
     "compilerOptions": {
+        "baseUrl": "./",
         "paths": {
             "src/*": ["./src/*"]
         },
@@ -7,7 +8,7 @@
         "module": "es2022",
         "lib": ["dom", "esnext"],
         "outDir": "./build/esm",
-        "rootDir": ".",
+        "rootDir": "./",
         "strict": true,
         "strictPropertyInitialization": false, // to enable generic constructors, e.g. on CircuitValue
         "skipLibCheck": true,
