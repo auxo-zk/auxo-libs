@@ -1,6 +1,10 @@
-export { getProfiler, getMemoryUsage } from './benchmark.js';
+export { getProfiler, getMemoryUsage } from 'src/utils/benchmark.js';
 
-export { readConfig, readZkAppConfig, readUserConfig } from './config.js';
+export {
+    readConfig,
+    readZkAppConfig,
+    readUserConfig,
+} from 'src/utils/config.js';
 
 export {
     Profiler,
@@ -14,7 +18,7 @@ export {
     TxResult,
     FetchedActions,
     FetchedEvents,
-} from './constants.js';
+} from 'src/utils/constants.js';
 
 export {
     randomAccounts,
@@ -26,7 +30,7 @@ export {
     fetchActions,
     fetchEvents,
     fetchZkAppState,
-} from './network.js';
+} from 'src/utils/network.js';
 
 export {
     updateActionState,
@@ -35,4 +39,4 @@ export {
     buildAssertMessage,
     requireSignature,
     requireCaller,
-} from './zkApp.js';
+} from 'src/utils/zkApp.js';

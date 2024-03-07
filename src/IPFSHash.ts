@@ -1,5 +1,5 @@
 import { Encoding } from 'o1js';
-import { FieldDynamicArray } from './DynamicArray.js';
+import { FieldDynamicArray } from 'src/DynamicArray.js';
 
 export class IpfsHash extends FieldDynamicArray(3) {
     static fromString(s: string): IpfsHash {

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import fs from 'fs';
-import { Profiler } from './constants';
+import { Profiler } from 'src/utils/constants.js';
 
 export { getProfiler, getMemoryUsage };
 

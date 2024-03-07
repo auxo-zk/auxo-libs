@@ -10,7 +10,7 @@ import {
     UInt32,
     fetchAccount,
 } from 'o1js';
-import { getMemoryUsage } from './benchmark.js';
+import { getMemoryUsage } from 'src/utils/benchmark.js';
 import {
     FeePayer,
     FetchedActions,
@@ -21,7 +21,7 @@ import {
     Program,
     TxResult,
     ZkApp,
-} from './constants.js';
+} from 'src/utils/constants.js';
 
 export {
     randomAccounts,
