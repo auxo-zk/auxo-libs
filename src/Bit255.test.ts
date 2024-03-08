@@ -1,5 +1,5 @@
 import { Provable, Reducer, Scalar, SmartContract, method } from 'o1js';
-import { Bit255 } from 'src/Bit255.js';
+import { Bit255 } from './Bit255.js';
 
 describe('Bit255', () => {
     it('Should be provable', async () => {

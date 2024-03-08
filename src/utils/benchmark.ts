@@ -1,12 +1,12 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import fs from 'fs';
-import { Profiler } from 'src/utils/constants.js';
+import { Profiler } from './constants.js';
 
 export { getProfiler, getMemoryUsage };
 
 const round = (x: number) => Math.round(x * 100) / 100;
 
 function getProfiler(name: string): Profiler {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let times: Record<string, any> = {};
     let label: string;
 

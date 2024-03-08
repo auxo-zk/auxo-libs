@@ -1,6 +1,6 @@
-export { Bit255 } from 'src/Bit255.js';
+export { Bit255 } from './Bit255.js';
 
-export { CustomScalar } from 'src/CustomScalar.js';
+export { CustomScalar } from './CustomScalar.js';
 
 export {
     Bit255DynamicArray,
@@ -10,8 +10,8 @@ export {
     ScalarDynamicArray,
     PublicKeyDynamicArray,
     DynamicArray,
-} from 'src/DynamicArray.js';
+} from './DynamicArray.js';
 
-export { IpfsHash } from 'src/IpfsHash.js';
+export { IpfsHash } from './IpfsHash.js';
 
-export * as Utils from 'src/utils/index.js';
+export * as Utils from './utils/index.js';

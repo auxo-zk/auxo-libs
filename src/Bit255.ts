@@ -1,5 +1,5 @@
 import { Bool, Field, Poseidon, Provable, Scalar, Struct } from 'o1js';
-import { CustomScalar } from 'src/CustomScalar.js';
+import { CustomScalar } from './CustomScalar.js';
 
 // WARNING - Convert between Scalar and Bit255 does not preserve bigint value
 export class Bit255 extends Struct({

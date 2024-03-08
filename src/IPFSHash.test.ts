@@ -1,5 +1,5 @@
 import { Provable } from 'o1js';
-import { IpfsHash } from 'src/IpfsHash.js';
+import { IpfsHash } from './IpfsHash.js';
 
 describe('IpfsHash', () => {
     it('Should be provable code', async () => {

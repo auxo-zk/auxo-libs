@@ -1,6 +1,6 @@
 import fs from 'fs/promises';
 import { PrivateKey, PublicKey } from 'o1js';
-import { Base58Key, Config, Key, ZkApp } from 'src/utils/constants.js';
+import { Base58Key, Config, Key, ZkApp } from './constants.js';
 
 export { readConfig, readZkAppConfig, readUserConfig };
 

@@ -9,9 +9,9 @@ import {
     Struct,
 } from 'o1js';
 
-import { Bit255 } from 'src/Bit255.js';
-import { CustomScalar } from 'src/CustomScalar.js';
-import { hashable } from 'src/Hashable.js';
+import { Bit255 } from './Bit255.js';
+import { CustomScalar } from './CustomScalar.js';
+import { hashable } from './Hashable.js';
 
 export {
     Bit255DynamicArray,

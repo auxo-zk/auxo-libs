@@ -17,9 +17,9 @@ import {
     GroupDynamicArray,
     PublicKeyDynamicArray,
     ScalarDynamicArray,
-} from 'src/DynamicArray.js';
-import { CustomScalar } from 'src/CustomScalar.js';
-import { Bit255 } from 'src/Bit255.js';
+} from './DynamicArray.js';
+import { CustomScalar } from './CustomScalar.js';
+import { Bit255 } from './Bit255.js';
 
 describe('DynamicArray', () => {
     const MAX_HEIGHT = 5;
