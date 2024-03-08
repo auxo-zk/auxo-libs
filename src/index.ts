@@ -1,3 +1,5 @@
+export { ActionMask } from './ActionMask.js';
+
 export { Bit255 } from './Bit255.js';
 
 export { CustomScalar } from './CustomScalar.js';
