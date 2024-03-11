@@ -1,14 +1,17 @@
-import fs from 'fs/promises';
 import { PrivateKey, PublicKey } from 'o1js';
-import { Base58Key, Config, Key, ZkApp } from './constants.js';
+import { Base58Key, Config, FileSystem, Key, ZkApp } from './constants.js';
 
 export { readConfig, readZkAppConfig, readUserConfig };
 
-async function readConfig(path = 'config.json'): Promise<Config> {
+async function readConfig(
+    fs: FileSystem,
+    path = 'config.json'
+): Promise<Config> {
     return JSON.parse(await fs.readFile(path, 'utf8'));
 }
 
 async function readZkAppConfig(
+    fs: FileSystem,
     label: string | number,
     path = 'config.json'
 ): Promise<{
@@ -17,7 +20,7 @@ async function readZkAppConfig(
     feePayer: Key;
     zkApp: ZkApp;
 }> {
-    const configJson = await readConfig(path);
+    const configJson = await readConfig(fs, path);
     let config =
         typeof label === 'string'
             ? configJson.deployAliases[label]
@@ -52,6 +55,7 @@ async function readZkAppConfig(
 }
 
 async function readUserConfig(
+    fs: FileSystem,
     label: string | number,
     path = 'config.json'
 ): Promise<{
@@ -60,7 +64,7 @@ async function readUserConfig(
     feePayer: Key;
     user: Key;
 }> {
-    const configJson = await readConfig(path);
+    const configJson = await readConfig(fs, path);
     let config =
         typeof label === 'string'
             ? configJson.deployAliases[label]

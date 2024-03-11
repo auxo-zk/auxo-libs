@@ -12,6 +12,7 @@ import {
 
 export {
     MAX_RETRY,
+    FileSystem,
     Profiler,
     Logger,
     Program,
@@ -26,6 +27,13 @@ export {
 };
 
 const MAX_RETRY = 3;
+
+type FileSystem = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    appendFile(...args: any): Promise<void>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    readFile(...args: any): Promise<any>;
+};
 
 type Profiler = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

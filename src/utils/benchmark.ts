@@ -1,11 +1,10 @@
-import fs from 'fs';
-import { Profiler } from './constants.js';
+import { FileSystem, Profiler } from './constants.js';
 
 export { getProfiler, getMemoryUsage };
 
 const round = (x: number) => Math.round(x * 100) / 100;
 
-function getProfiler(name: string): Profiler {
+function getProfiler(name: string, fs: FileSystem): Profiler {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let times: Record<string, any> = {};
     let label: string;
@@ -27,7 +26,7 @@ function getProfiler(name: string): Profiler {
             times[label].end = performance.now();
             return this;
         },
-        store() {
+        async store() {
             let profilingData = `## Times for ${name}\n\n`;
             profilingData += `| Name | time passed in s |\n|---|---|`;
             let totalTimePassed = 0;
@@ -43,7 +42,7 @@ function getProfiler(name: string): Profiler {
                 totalTimePassed
             )} seconds to run the entire benchmark\n\n\n`;
 
-            fs.appendFileSync(`profiler/${name}.md`, profilingData);
+            await fs.appendFile(`profiler/${name}.md`, profilingData);
         },
     };
 }
