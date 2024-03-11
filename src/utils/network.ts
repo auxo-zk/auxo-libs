@@ -1,5 +1,6 @@
 import {
     AccountUpdate,
+    Cache,
     Field,
     Mina,
     PendingTransaction,
