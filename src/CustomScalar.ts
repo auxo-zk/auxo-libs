@@ -44,8 +44,8 @@ export class CustomScalar extends Struct({
         return this.head.equals(s.head).and(this.tail.equals(s.tail));
     }
 
-    assertEquals(s: CustomScalar): void {
-        this.equals(s).assertTrue();
+    assertEquals(s: CustomScalar, message?: string | undefined): void {
+        this.equals(s).assertTrue(message);
     }
 
     toScalar(): Scalar {

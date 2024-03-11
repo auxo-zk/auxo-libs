@@ -77,9 +77,8 @@ export class Bit255 extends Struct({
         return this.head.equals(b.head).and(this.tail.equals(b.tail));
     }
 
-    assertEquals(b: Bit255): void {
-        this.head.assertEquals(b.head);
-        this.tail.assertEquals(b.tail);
+    assertEquals(b: Bit255, message?: string | undefined): void {
+        this.equals(b).assertTrue(message);
     }
 
     hash(): Field {
