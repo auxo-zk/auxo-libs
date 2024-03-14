@@ -10,14 +10,21 @@ describe('CustomScalar', () => {
     });
 
     it('Should convert from odd UInt64 value correctly', async () => {
-        let number = UInt64.from(BigInt(10 ** 16) + 1n);
-        let scalar = CustomScalar.fromUInt64(number);
-        expect(scalar.toScalar().toBigInt()).toEqual(number.toBigInt());
-    });
-
-    it('Should not convert from even UInt64 value', async () => {
-        expect(() =>
-            CustomScalar.fromUInt64(UInt64.from(BigInt(10 ** 16)))
-        ).toThrow();
+        let min = UInt64.zero;
+        let max = UInt64.MAXINT();
+        let odd = UInt64.from(BigInt(10 ** 16) + 1n);
+        let even = UInt64.from(BigInt(10 ** 8) + 1n);
+        expect(CustomScalar.fromUInt64(min).toScalar().toBigInt()).toEqual(
+            min.toBigInt()
+        );
+        expect(CustomScalar.fromUInt64(max).toScalar().toBigInt()).toEqual(
+            max.toBigInt()
+        );
+        expect(CustomScalar.fromUInt64(odd).toScalar().toBigInt()).toEqual(
+            odd.toBigInt()
+        );
+        expect(CustomScalar.fromUInt64(even).toScalar().toBigInt()).toEqual(
+            even.toBigInt()
+        );
     });
 });
