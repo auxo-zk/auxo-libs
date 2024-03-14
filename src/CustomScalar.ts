@@ -1,4 +1,4 @@
-import { Bool, Field, Poseidon, Scalar, Struct } from 'o1js';
+import { Bool, Field, Poseidon, Scalar, Struct, UInt64 } from 'o1js';
 
 export class CustomScalar extends Struct({
     head: Field,
@@ -34,6 +34,18 @@ export class CustomScalar extends Struct({
 
     static sizeInFields(): number {
         return 2;
+    }
+
+    static fromUInt64(number: UInt64): CustomScalar {
+        number.value.isEven().assertFalse();
+        return CustomScalar.fromScalar(
+            Scalar.fromBits(
+                number.value
+                    .add(Field(91120631063012739630693492830161076225n))
+                    .div(2)
+                    .toBits()
+            )
+        );
     }
 
     hash(): Field {

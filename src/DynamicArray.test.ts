@@ -36,12 +36,12 @@ describe('DynamicArray', () => {
         value2: Field,
     }) {}
 
-    xit('Should be provable', async () => {
+    it('Should be provable', async () => {
         class Action extends Struct({
             boolArr: BoolArray,
             bit255Arr: Bit255Array,
             fieldArr: FieldArray,
-            groupArr: GroupArray,
+            // groupArr: GroupArray,
             pubKeyArr: PublicKeyArray,
             scalarArr: ScalarArray,
         }) {}

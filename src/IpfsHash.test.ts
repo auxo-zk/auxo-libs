@@ -8,7 +8,6 @@ describe('IpfsHash', () => {
             let encodedData = Provable.witness(IpfsHash, () => {
                 return IpfsHash.fromString(ipfsHash);
             });
-            Provable.log(encodedData);
         });
     });
 
