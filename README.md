@@ -11,6 +11,7 @@ An On-chain Funding Platform with privacy-preserving features powered by ZKP.
     <a href="https://www.npmjs.com/org/auxo-dev" target="_blank"><img src="https://img.shields.io/npm/v/@auxo-dev/auxo-libs.svg" alt="NPM Version" /></a>
     <a href="https://www.npmjs.com/org/auxo-dev" target="_blank"><img src="https://img.shields.io/npm/l/@auxo-dev/auxo-libs.svg" alt="Package License" /></a>
     <a href="https://www.npmjs.com/org/auxo-dev" target="_blank"><img src="https://img.shields.io/npm/dm/@auxo-dev/auxo-libs.svg" alt="NPM Downloads" /></a>
+    <a href='https://coveralls.io/github/auxo-zk/auxo-libs?branch=main'><img src='https://coveralls.io/repos/github/auxo-zk/auxo-libs/badge.svg?branch=main' alt='Coverage Status' /></a>
     <a href="https://twitter.com/AuxoZk" target="_blank"><img src="https://img.shields.io/twitter/follow/AuxoZk.svg?style=social&label=Follow"></a>
 </p>
 
