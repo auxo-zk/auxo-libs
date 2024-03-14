@@ -54,7 +54,7 @@ describe('DynamicArray', () => {
             }
         }
 
-        await TestDynamicArray.compile();
+        await TestDynamicArray.analyzeMethods();
     });
 
     it('Should serialize BoolDynamicArray correctly', async () => {

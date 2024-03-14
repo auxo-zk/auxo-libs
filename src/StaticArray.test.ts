@@ -38,7 +38,7 @@ describe('StaticArray', () => {
             }
         }
 
-        await TestDynamicArray.compile();
+        await TestDynamicArray.analyzeMethods();
     });
 
     it('Should serialize StaticArray correctly', async () => {

@@ -20,7 +20,7 @@ describe('Bit255', () => {
             }
         }
 
-        await TestBit255.compile();
+        await TestBit255.analyzeMethods();
     });
 
     it('Should xor correctly', async () => {
