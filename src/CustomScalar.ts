@@ -1,9 +1,5 @@
-import { Bool, Field, Poseidon, Provable, Scalar, Struct, UInt64 } from 'o1js';
-
-const SHIFT_CONST_ODD = Scalar.from(-1n - BigInt(2 ** 255)).toBigInt();
-const SHIFT_CONST_EVEN = Scalar.from(SHIFT_CONST_ODD)
-    .div(Scalar.from(2))
-    .toBigInt();
+import { Bool, Field, Poseidon, Scalar, Struct, UInt64 } from 'o1js';
+import { fromUInt64ToScalar } from './utils/math.js';
 
 export class CustomScalar extends Struct({
     head: Field,
@@ -42,19 +38,7 @@ export class CustomScalar extends Struct({
     }
 
     static fromUInt64(number: UInt64): CustomScalar {
-        return Provable.if(
-            number.value.isEven(),
-            CustomScalar.fromScalar(
-                Scalar.fromBits(
-                    number.value.div(2).add(Field(SHIFT_CONST_EVEN)).toBits()
-                )
-            ),
-            CustomScalar.fromScalar(
-                Scalar.fromBits(
-                    number.value.add(Field(SHIFT_CONST_ODD)).div(2).toBits()
-                )
-            )
-        );
+        return CustomScalar.fromScalar(fromUInt64ToScalar(number));
     }
 
     hash(): Field {

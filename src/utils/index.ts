@@ -17,6 +17,12 @@ export {
 } from './constants.js';
 
 export {
+    SHIFT_CONST_ODD,
+    SHIFT_CONST_EVEN,
+    fromUInt64ToScalar,
+} from './math.js';
+
+export {
     randomAccounts,
     compile,
     prove,
