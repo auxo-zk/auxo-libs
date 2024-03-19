@@ -16,4 +16,6 @@ export {
 
 export { IpfsHash } from './IpfsHash.js';
 
+export { StaticArray } from './StaticArray.js';
+
 export * as Utils from './utils/index.js';
