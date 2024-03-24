@@ -15,7 +15,7 @@
     "main": "./build/esm/src/index.js",
     "types": "./build/types/src/index.d.ts",
     "scripts": {
-        "build": "tsc --build tsconfig.json tsconfig.cjs.json tsconfig.types.json && ./fix-export.sh",
+        "build": "tsc --build tsconfig.esm.json tsconfig.cjs.json tsconfig.types.json && ./fix-export.sh",
         "buildw": "tsc --watch",
         "scripts": "tsc --build tsconfig.json tsconfig.cjs.json tsconfig.types.json && ./fix-export.sh && node",
         "coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
@@ -39,7 +39,7 @@
     ],
     "lint-staged": {
         "**/*": [
-            "eslint src/* --fix --ignore-pattern *.sh --ignore-pattern *.md",
+            "eslint src/* --fix",
             "prettier --write --ignore-unknown"
         ]
     },

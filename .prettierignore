@@ -5,6 +5,9 @@ coverage
 .husky
 *.yml
 
+# Packages
+*.tgz
+
 # Editor
 .vscode
 
