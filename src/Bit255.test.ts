@@ -7,7 +7,7 @@ describe('Bit255', () => {
             reducer = Reducer({ actionType: Bit255 });
 
             @method
-            xor(a: Bit255, b: Bit255, c: Bit255) {
+            async xor(a: Bit255, b: Bit255, c: Bit255) {
                 let res = Bit255.xor(a, b);
                 res.assertEquals(c);
                 res.assertEquals(

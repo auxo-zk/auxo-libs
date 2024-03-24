@@ -4,6 +4,7 @@ export {
     updateActionState,
     updateActionStateWithHash,
     packNumberArray,
+    unpackNumberArray,
     buildAssertMessage,
     requireSignature,
     requireCaller,
@@ -20,6 +21,20 @@ function updateActionStateWithHash(state: Field, actionsHash: Field) {
 
 function packNumberArray(numbers: number[], maxSize: number): Field {
     return Field.fromBits(numbers.map((e) => Field(e).toBits(maxSize)).flat());
+}
+
+function unpackNumberArray(packed: Field, maxSize: number): number[] {
+    let numbers: number[] = [];
+    for (let i = 0; i < 255 / maxSize; i++) {
+        numbers.push(
+            Number(
+                Field.fromBits(
+                    packed.toBits().slice(i * maxSize, (i + 1) * maxSize)
+                )
+            )
+        );
+    }
+    return numbers;
 }
 
 function buildAssertMessage(

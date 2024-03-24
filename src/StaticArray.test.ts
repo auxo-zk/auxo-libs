@@ -33,7 +33,7 @@ describe('StaticArray', () => {
             reducer = Reducer({ actionType: Action });
 
             @method
-            test(action: Action) {
+            async test(action: Action) {
                 this.reducer.dispatch(action);
             }
         }

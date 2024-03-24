@@ -94,7 +94,7 @@ async function prove<T>(
 async function proveAndSendTx(
     contractName: string,
     methodName: string,
-    functionCall: () => void,
+    functionCall: () => Promise<void>,
     feePayer: FeePayer,
     logger?: Logger,
     profiler?: Profiler,
@@ -180,7 +180,7 @@ async function deployZkApps(
             memo: feePayer.memo,
             nonce: feePayer.nonce,
         },
-        () => {
+        async () => {
             AccountUpdate.fundNewAccount(
                 feePayer.sender.publicKey,
                 deployData.length
