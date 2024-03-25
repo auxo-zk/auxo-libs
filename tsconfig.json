@@ -2,7 +2,7 @@
     "compilerOptions": {
         "target": "es2020",
         "module": "es2022",
-        "lib": ["dom", "esnext"],
+        "lib": ["esnext"],
         "outDir": "./build/esm",
         "rootDir": ".",
         "strict": true,
@@ -17,7 +17,9 @@
         "declaration": true,
         "sourceMap": true,
         "noFallthroughCasesInSwitch": true,
-        "allowSyntheticDefaultImports": true
+        "allowSyntheticDefaultImports": true,
+        "importHelpers": true,
+        "removeComments": true
     },
     "include": ["src/**/*.ts"]
 }
