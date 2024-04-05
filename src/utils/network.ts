@@ -20,6 +20,7 @@ import {
     MAX_RETRY,
     Profiler,
     Program,
+    TX_FEE,
     TxResult,
     ZkApp,
 } from './constants.js';
@@ -31,13 +32,14 @@ export {
     proveAndSendTx,
     deployZkApps,
     sendTx,
+    fetchNonce,
     fetchActions,
     fetchEvents,
     fetchZkAppState,
 };
 
 function randomAccounts<K extends string>(
-    ...names: [K, ...K[]]
+    names: K[]
 ): { keys: Record<K, PrivateKey>; addresses: Record<K, PublicKey> } {
     let base58Keys = Array(names.length)
         .fill('')
@@ -87,8 +89,34 @@ async function prove<T>(
     if (profiler) profiler.start(`${programName}.${methodName}.prove`);
     let result = await proofGeneration;
     if (profiler) profiler.stop();
-    console.log('Generating proof done!');
+    if (logger && logger.info) console.log('Generating proof done!');
     return result;
+}
+
+async function sendTx(
+    tx: Transaction,
+    waitForBlock = false
+): Promise<TxResult> {
+    let retries = MAX_RETRY;
+    let result;
+    while (retries > 0) {
+        try {
+            result = await tx.safeSend();
+            if (result.status === 'pending') {
+                if (waitForBlock)
+                    return await (result as PendingTransaction).wait();
+            } else if (result.status === 'rejected') {
+                console.error('Transaction failed with errors:');
+                throw result.errors;
+            }
+            return result;
+        } catch (error) {
+            retries--;
+            console.log('Transaction failed to be sent with error:', error);
+            console.log(`Retrying...`);
+        }
+    }
+    throw new Error(`Transaction cannot be sent after ${MAX_RETRY} retries!`);
 }
 
 async function proveAndSendTx(
@@ -102,22 +130,13 @@ async function proveAndSendTx(
 ) {
     if (logger && logger.memoryUsage)
         console.log('Current memory usage:', getMemoryUsage(), 'MB');
-    let { account, error } = await fetchAccount({
-        publicKey: feePayer.sender.publicKey,
-    });
-    if (account === undefined)
-        throw new Error(
-            `Error ${error?.statusCode}: ${error?.statusText}` ||
-                'Account not found!'
-        );
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    feePayer.nonce = feePayer.nonce || Number(account!.nonce);
+
     let tx = await Mina.transaction(
         {
             sender: feePayer.sender.publicKey,
-            fee: feePayer.fee,
+            fee: feePayer.fee || TX_FEE,
             memo: feePayer.memo,
-            nonce: feePayer.nonce,
+            nonce: await fetchNonce(feePayer.sender.publicKey),
         },
         functionCall
     );
@@ -128,7 +147,7 @@ async function proveAndSendTx(
     if (profiler) profiler.start(`${contractName}.${methodName}.prove`);
     await tx.prove();
     if (profiler) profiler.stop();
-    console.log('Generating proof done!');
+    if (logger && logger.info) console.log('Generating proof done!');
     return await sendTx(
         await tx.sign([feePayer.sender.privateKey]),
         waitForBlock
@@ -162,23 +181,12 @@ async function deployZkApps(
         });
     }
 
-    let { account, error } = await fetchAccount({
-        publicKey: feePayer.sender.publicKey,
-    });
-    if (account === undefined)
-        throw new Error(
-            `Error ${error?.statusCode}: ${error?.statusText}` ||
-                'Account not found!'
-        );
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    feePayer.nonce = feePayer.nonce || Number(account!.nonce);
-
     let tx = await Mina.transaction(
         {
             sender: feePayer.sender.publicKey,
-            fee: feePayer.fee,
+            fee: feePayer.fee || TX_FEE,
             memo: feePayer.memo,
-            nonce: feePayer.nonce,
+            nonce: await fetchNonce(feePayer.sender.publicKey),
         },
         async () => {
             AccountUpdate.fundNewAccount(
@@ -202,71 +210,60 @@ async function deployZkApps(
         ]),
         waitForBlock
     );
-    console.log('Successfully deployed!');
+    if (logger && logger.info) console.log('Successfully deployed!');
     return result;
 }
 
-async function sendTx(
-    tx: Transaction,
-    waitForBlock = false
-): Promise<TxResult> {
-    let retries = MAX_RETRY;
-    let result;
-    while (retries > 0) {
-        try {
-            result = await tx.safeSend();
-            if (result.status === 'pending') {
-                if (waitForBlock)
-                    return await (result as PendingTransaction).wait();
-            } else if (result.status === 'rejected') {
-                console.error('Transaction failed with errors:', result.errors);
-            }
-            return result;
-        } catch (error) {
-            console.error(error);
-            retries--;
-            if (retries === 0) {
-                throw error; // Throw the error if no more retries left
-            }
-            console.log(`Retrying... (${retries} retries left)`);
-        }
+async function fetchNonce(publicKey: PublicKey): Promise<number | undefined> {
+    try {
+        let { account, error } = await fetchAccount({
+            publicKey: publicKey,
+        });
+        if (account == undefined) throw error;
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        return Number(account.nonce);
+    } catch (error) {
+        console.error(error);
     }
-    throw new Error('Cannot send Tx!');
 }
 
 async function fetchActions(
     publicKey: PublicKey,
     fromActionState?: Field,
-    endActionState?: Field
+    endActionState?: Field,
+    tokenId: Field = TokenId.default
+): Promise<FetchedActions[]> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-): Promise<FetchedActions[] | { error: any }> {
-    return await Mina.fetchActions(publicKey, {
-        fromActionState: fromActionState,
-        endActionState: endActionState,
-    });
+    let result: any = await Mina.fetchActions(
+        publicKey,
+        {
+            fromActionState,
+            endActionState,
+        },
+        tokenId
+    );
+    if (result.error) throw result.error;
+    return result;
 }
 
 async function fetchEvents(
     publicKey: PublicKey,
-    tokenId?: Field,
     from?: number,
-    to?: number
+    to?: number,
+    tokenId: Field = TokenId.default
 ): Promise<FetchedEvents[]> {
-    return await Mina.fetchEvents(publicKey, tokenId || TokenId.default, {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let result: any = await Mina.fetchEvents(publicKey, tokenId, {
         from: from == undefined ? undefined : UInt32.from(from),
         to: to == undefined ? undefined : UInt32.from(to),
     });
+    if (result.error) throw result.error;
+    return result;
 }
 
-async function fetchZkAppState(
-    publicKey: string
-): Promise<Field[] | undefined> {
-    const result = await fetchAccount({
-        publicKey: publicKey,
-    });
-    const account = result.account;
-    if (account == undefined) throw new Error('Account not found!');
-    if (account.zkapp === undefined) throw new Error('zkApp not found!');
-
+async function fetchZkAppState(publicKey: PublicKey): Promise<Field[]> {
+    let account = await Mina.getAccount(publicKey);
+    if (account.zkapp === undefined)
+        throw new Error('This account is not a zkApp!');
     return account?.zkapp?.appState;
 }

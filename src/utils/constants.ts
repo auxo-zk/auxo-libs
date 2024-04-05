@@ -12,6 +12,7 @@ import {
 
 export {
     MAX_RETRY,
+    TX_FEE,
     FileSystem,
     Profiler,
     Logger,
@@ -27,6 +28,8 @@ export {
 };
 
 const MAX_RETRY = 3;
+
+const TX_FEE = 0.101 * 1e9;
 
 type FileSystem = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
