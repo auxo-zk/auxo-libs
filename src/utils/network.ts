@@ -56,8 +56,8 @@ function randomAccounts<K extends string>(
 async function compile(
     program: Program,
     cache?: Cache,
-    logger?: Logger,
-    profiler?: Profiler
+    profiler?: Profiler,
+    logger?: Logger
 ): Promise<{
     verificationKey: { data: string; hash: Field };
 }> {
@@ -79,8 +79,8 @@ async function prove<T>(
     programName: string,
     methodName: string,
     proofGeneration: Promise<T>,
-    logger?: Logger,
-    profiler?: Profiler
+    profiler?: Profiler,
+    logger?: Logger
 ): Promise<T> {
     if (logger && logger.memoryUsage)
         console.log('Current memory usage:', getMemoryUsage(), 'MB');
@@ -95,7 +95,8 @@ async function prove<T>(
 
 async function sendTx(
     tx: Transaction,
-    waitForBlock = false
+    waitForBlock = false,
+    logger?: Logger
 ): Promise<TxResult> {
     let retries = MAX_RETRY;
     let result;
@@ -106,17 +107,20 @@ async function sendTx(
                 if (waitForBlock)
                     return await (result as PendingTransaction).wait();
             } else if (result.status === 'rejected') {
-                console.error('Transaction failed with errors:');
+                if (logger && logger.error)
+                    console.error('Failed to send Tx with errors:');
                 throw result.errors;
             }
             return result;
         } catch (error) {
             retries--;
-            console.log('Transaction failed to be sent with error:', error);
-            console.log(`Retrying...`);
+            if (logger && logger.error) {
+                console.error('Failed to send Tx with errors:', error);
+                console.log(`Retrying...`);
+            }
         }
     }
-    throw new Error(`Transaction cannot be sent after ${MAX_RETRY} retries!`);
+    throw new Error(`Failed to send Tx after ${MAX_RETRY} retries!`);
 }
 
 async function proveAndSendTx(
@@ -124,9 +128,9 @@ async function proveAndSendTx(
     methodName: string,
     functionCall: () => Promise<void>,
     feePayer: FeePayer,
-    logger?: Logger,
+    waitForBlock = false,
     profiler?: Profiler,
-    waitForBlock = false
+    logger?: Logger
 ) {
     if (logger && logger.memoryUsage)
         console.log('Current memory usage:', getMemoryUsage(), 'MB');
@@ -163,8 +167,8 @@ async function deployZkApps(
         }
     ],
     feePayer: FeePayer,
-    logger?: Logger,
-    waitForBlock = false
+    waitForBlock = false,
+    logger?: Logger
 ): Promise<TxResult> {
     for (let i = 0; i < deployData.length; i++) {
         if (deployData[i].zkApp.contract === undefined)
@@ -214,16 +218,18 @@ async function deployZkApps(
     return result;
 }
 
-async function fetchNonce(publicKey: PublicKey): Promise<number | undefined> {
+async function fetchNonce(
+    publicKey: PublicKey,
+    logger?: Logger
+): Promise<number | undefined> {
     try {
         let { account, error } = await fetchAccount({
             publicKey: publicKey,
         });
         if (account == undefined) throw error;
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         return Number(account.nonce);
     } catch (error) {
-        console.error(error);
+        if (logger && logger.error) console.error(error);
     }
 }
 

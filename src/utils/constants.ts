@@ -47,8 +47,9 @@ type Profiler = {
 };
 
 type Logger = {
-    info: boolean;
-    memoryUsage: boolean;
+    info?: boolean;
+    error?: boolean;
+    memoryUsage?: boolean;
 };
 
 type Program = {

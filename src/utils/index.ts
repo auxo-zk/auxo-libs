@@ -29,6 +29,7 @@ export {
     proveAndSendTx,
     deployZkApps,
     sendTx,
+    fetchNonce,
     fetchActions,
     fetchEvents,
     fetchZkAppState,

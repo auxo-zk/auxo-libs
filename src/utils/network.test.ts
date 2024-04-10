@@ -46,6 +46,7 @@ describe('Network', () => {
     const cache = Cache.FileSystem('caches');
     const logger = {
         info: true,
+        error: true,
         memoryUsage: true,
     };
     const profiler = getProfiler('Test', fs);
@@ -108,7 +109,7 @@ describe('Network', () => {
     });
 
     it('should compile contract', async () => {
-        if (doProofs) await compile(TestContract, cache, logger, profiler);
+        if (doProofs) await compile(TestContract, cache, profiler, logger);
     });
 
     it('should deploy zkApp', async () => {
@@ -128,8 +129,8 @@ describe('Network', () => {
             TestContract.name,
             'test',
             (testZkApp.contract as TestContract).test(Field(1), Field(1)),
-            logger,
-            profiler
+            profiler,
+            logger
         );
     });
 
@@ -155,9 +156,9 @@ describe('Network', () => {
             async () =>
                 (testZkApp.contract as TestContract).test(Field(1), Field(1)),
             feePayer,
-            logger,
+            true,
             profiler,
-            true
+            logger
         );
     });
 
