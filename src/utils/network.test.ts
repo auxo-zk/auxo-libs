@@ -58,6 +58,9 @@ describe('Network', () => {
         testZkApp = {
             key: PrivateKey.randomKeypair(),
             name: 'TestContract',
+            initArgs: {
+                num: Field(100),
+            },
         };
         testZkApp.contract = new TestContract(testZkApp.key.publicKey);
     });
@@ -107,8 +110,7 @@ describe('Network', () => {
         await proveAndSendTx(
             TestContract.name,
             'test',
-            async () =>
-                (testZkApp.contract as TestContract).test(Field(1), Field(1)),
+            (testZkApp.contract as TestContract).test(Field(1), Field(1)),
             feePayer,
             true,
             profiler,

@@ -126,7 +126,7 @@ async function sendTx(
 async function proveAndSendTx(
     contractName: string,
     methodName: string,
-    functionCall: () => Promise<void>,
+    functionCall: Promise<void>,
     feePayer: FeePayer,
     waitForBlock = false,
     profiler?: Profiler,
@@ -142,7 +142,7 @@ async function proveAndSendTx(
             memo: feePayer.memo,
             nonce: await fetchNonce(feePayer.sender.publicKey),
         },
-        functionCall
+        () => functionCall
     );
     if (logger && logger.info)
         console.log(
@@ -154,7 +154,8 @@ async function proveAndSendTx(
     if (logger && logger.info) console.log('Generating proof done!');
     return await sendTx(
         await tx.sign([feePayer.sender.privateKey]),
-        waitForBlock
+        waitForBlock,
+        logger
     );
 }
 
@@ -174,7 +175,7 @@ async function deployZkApps(
     if (logger && logger.info) {
         console.log('Deploying:');
         zkApps.map((e) => {
-            console.log(`- ${e.name} || 'Unknown'`);
+            console.log(`- ${e.name || 'Unknown'}`);
         });
     }
 
@@ -193,7 +194,7 @@ async function deployZkApps(
             zkApps.map((e) => {
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 e.contract!.deploy();
-                Object.entries(e.initArgs ?? []).map(([key, value]) =>
+                Object.entries(e.initArgs ?? {}).map(([key, value]) =>
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     (e.contract as any)[key].set(value)
                 );
@@ -205,7 +206,8 @@ async function deployZkApps(
             feePayer.sender.privateKey,
             ...zkApps.map((e) => e.key.privateKey),
         ]),
-        waitForBlock
+        waitForBlock,
+        logger
     );
     if (logger && logger.info) console.log('Successfully deployed!');
     return result;
