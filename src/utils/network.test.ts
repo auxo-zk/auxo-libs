@@ -3,8 +3,6 @@ import {
     Field,
     Mina,
     PrivateKey,
-    Provable,
-    PublicKey,
     Reducer,
     SmartContract,
     State,
@@ -52,52 +50,16 @@ describe('Network', () => {
     const profiler = getProfiler('Test', fs);
     let feePayer: FeePayer;
     let testZkApp: ZkApp;
-    // const network = Mina.Network({
-    //     mina: 'http://localhost:8080/graphql',
-    //     archive: 'http://localhost:8282',
-    //     lightnetAccountManager: 'http://localhost:8181',
-    // });
-    // Mina.setActiveInstance(network);
     const Local = Mina.LocalBlockchain({ proofsEnabled: doProofs });
     Mina.setActiveInstance(Local);
 
     beforeAll(async () => {
-        // let accquiredKeys = await Lightnet.listAcquiredKeyPairs({});
-        // if (accquiredKeys?.length == 0) {
-        //     let privateKey = (await Lightnet.acquireKeyPair()).privateKey;
-        //     let publicKey = privateKey.toPublicKey();
-        //     feePayer = { sender: { privateKey, publicKey } };
-        // } else {
-        // feePayer = {
-        //     sender: {
-        //         privateKey: accquiredKeys![0].privateKey,
-        //         publicKey: accquiredKeys![0].publicKey,
-        //     },
-        // };
         feePayer = { sender: Local.testAccounts[0] };
-        // }
-        if (true) {
-            testZkApp = {
-                key: {
-                    privateKey:
-                        PrivateKey.fromBigInt(
-                            26008585964768579152708118465695424684184602768554064880048813177630307793166n
-                        ),
-                    publicKey: PublicKey.fromBase58(
-                        'B62qnh3axyuNcX2VbtRc2EB1731qJRJoFF6H4HVebf381JTwutdypjr'
-                    ),
-                },
-                name: 'TestContract',
-            };
-        } else {
-            testZkApp = {
-                key: PrivateKey.randomKeypair(),
-                name: 'TestContract',
-            };
-        }
+        testZkApp = {
+            key: PrivateKey.randomKeypair(),
+            name: 'TestContract',
+        };
         testZkApp.contract = new TestContract(testZkApp.key.publicKey);
-        Provable.log('Fee payer:', feePayer.sender);
-        Provable.log('zkApp:', testZkApp.key);
     });
 
     it('should generate random accounts', async () => {
@@ -113,15 +75,7 @@ describe('Network', () => {
     });
 
     it('should deploy zkApp', async () => {
-        await deployZkApps(
-            [
-                {
-                    zkApp: testZkApp,
-                    initArgs: [],
-                },
-            ],
-            feePayer
-        );
+        await deployZkApps([testZkApp], feePayer);
     });
 
     it('should prove', async () => {

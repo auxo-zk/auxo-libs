@@ -159,29 +159,22 @@ async function proveAndSendTx(
 }
 
 async function deployZkApps(
-    deployData: [
-        {
-            zkApp: ZkApp;
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            initArgs: [string, any][];
-        }
-    ],
+    zkApps: ZkApp[],
     feePayer: FeePayer,
     waitForBlock = false,
     logger?: Logger
 ): Promise<TxResult> {
-    for (let i = 0; i < deployData.length; i++) {
-        if (deployData[i].zkApp.contract === undefined)
+    for (let i = 0; i < zkApps.length; i++) {
+        let zkApp = zkApps[i];
+        if (zkApp.contract === undefined)
             throw new Error(
-                `${
-                    deployData[i].zkApp.name || 'Unknown'
-                } did not define any contract!`
+                `${zkApp.name || 'Unknown'} did not define any contract!`
             );
     }
     if (logger && logger.info) {
         console.log('Deploying:');
-        deployData.map((e) => {
-            console.log(`- ${e.zkApp.name} || 'Unknown'`);
+        zkApps.map((e) => {
+            console.log(`- ${e.name} || 'Unknown'`);
         });
     }
 
@@ -195,14 +188,14 @@ async function deployZkApps(
         async () => {
             AccountUpdate.fundNewAccount(
                 feePayer.sender.publicKey,
-                deployData.length
+                zkApps.length
             );
-            deployData.map((e) => {
+            zkApps.map((e) => {
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                e.zkApp.contract!.deploy();
-                e.initArgs.map(([key, value]) =>
+                e.contract!.deploy();
+                Object.entries(e.initArgs ?? []).map(([key, value]) =>
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    (e.zkApp.contract as any)[key].set(value)
+                    (e.contract as any)[key].set(value)
                 );
             });
         }
@@ -210,7 +203,7 @@ async function deployZkApps(
     let result = await sendTx(
         await tx.sign([
             feePayer.sender.privateKey,
-            ...deployData.map((e) => e.zkApp.key.privateKey),
+            ...zkApps.map((e) => e.key.privateKey),
         ]),
         waitForBlock
     );
