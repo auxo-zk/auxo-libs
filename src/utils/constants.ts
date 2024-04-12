@@ -87,12 +87,13 @@ type Key = {
 
 type ZkApp = {
     key: Key;
-    contract?: SmartContract;
-    name?: string;
+    contract: SmartContract;
+    name: string;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     initArgs?: Record<string, any>;
-    actions?: Field[][];
-    events?: Field[][];
+    actionStates: Field[];
+    actions: Field[][];
+    events: Field[][];
 };
 
 type FeePayer = {

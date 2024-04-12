@@ -6,6 +6,8 @@ import {
     PendingTransaction,
     PrivateKey,
     PublicKey,
+    Reducer,
+    SmartContract,
     TokenId,
     Transaction,
     UInt32,
@@ -16,6 +18,7 @@ import {
     FeePayer,
     FetchedActions,
     FetchedEvents,
+    Key,
     Logger,
     MAX_RETRY,
     Profiler,
@@ -27,10 +30,12 @@ import {
 
 export {
     randomAccounts,
+    getZkApp,
     compile,
     prove,
     proveAndSendTx,
     deployZkApps,
+    deployZkAppsWithToken,
     sendTx,
     fetchNonce,
     fetchActions,
@@ -51,6 +56,28 @@ function randomAccounts<K extends string>(
         names.map((name) => [name, keys[name].toPublicKey()])
     ) as Record<K, PublicKey>;
     return { keys, addresses };
+}
+
+function getZkApp(
+    key: Key,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    contract: any,
+    name?: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    initArgs?: Record<string, any>,
+    actionStates?: Field[],
+    actions?: Field[][],
+    events?: Field[][]
+) {
+    return {
+        key,
+        contract,
+        name: name || 'Unknown',
+        initArgs: initArgs || {},
+        actionStates: actionStates || [Reducer.initialActionState],
+        actions: actions || [],
+        events: events || [],
+    };
 }
 
 async function compile(
@@ -78,7 +105,7 @@ async function compile(
 async function prove<T>(
     programName: string,
     methodName: string,
-    proofGeneration: Promise<T>,
+    proofGeneration: () => Promise<T>,
     profiler?: Profiler,
     logger?: Logger
 ): Promise<T> {
@@ -87,7 +114,7 @@ async function prove<T>(
     if (logger && logger.info)
         console.log(`Generating proof for ${programName}.${methodName}()...`);
     if (profiler) profiler.start(`${programName}.${methodName}.prove`);
-    let result = await proofGeneration;
+    let result = await proofGeneration();
     if (profiler) profiler.stop();
     if (logger && logger.info) console.log('Generating proof done!');
     return result;
@@ -102,15 +129,9 @@ async function sendTx(
     let result;
     while (retries > 0) {
         try {
-            result = await tx.safeSend();
-            if (result.status === 'pending') {
-                if (waitForBlock)
-                    return await (result as PendingTransaction).wait();
-            } else if (result.status === 'rejected') {
-                if (logger && logger.error)
-                    console.error('Failed to send Tx with errors:');
-                throw result.errors;
-            }
+            result = await tx.send();
+            if (waitForBlock)
+                return await (result as PendingTransaction).wait();
             return result;
         } catch (error) {
             retries--;
@@ -126,7 +147,7 @@ async function sendTx(
 async function proveAndSendTx(
     contractName: string,
     methodName: string,
-    functionCall: Promise<void>,
+    functionCall: () => Promise<void>,
     feePayer: FeePayer,
     waitForBlock = false,
     profiler?: Profiler,
@@ -142,7 +163,7 @@ async function proveAndSendTx(
             memo: feePayer.memo,
             nonce: await fetchNonce(feePayer.sender.publicKey),
         },
-        () => functionCall
+        functionCall
     );
     if (logger && logger.info)
         console.log(
@@ -165,17 +186,10 @@ async function deployZkApps(
     waitForBlock = false,
     logger?: Logger
 ): Promise<TxResult> {
-    for (let i = 0; i < zkApps.length; i++) {
-        let zkApp = zkApps[i];
-        if (zkApp.contract === undefined)
-            throw new Error(
-                `${zkApp.name || 'Unknown'} did not define any contract!`
-            );
-    }
     if (logger && logger.info) {
         console.log('Deploying:');
         zkApps.map((e) => {
-            console.log(`- ${e.name || 'Unknown'}`);
+            console.log(`- ${e.name}`);
         });
     }
 
@@ -192,8 +206,7 @@ async function deployZkApps(
                 zkApps.length
             );
             zkApps.map((e) => {
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                e.contract!.deploy();
+                e.contract.deploy();
                 Object.entries(e.initArgs ?? {}).map(([key, value]) =>
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     (e.contract as any)[key].set(value)
@@ -205,6 +218,58 @@ async function deployZkApps(
         await tx.sign([
             feePayer.sender.privateKey,
             ...zkApps.map((e) => e.key.privateKey),
+        ]),
+        waitForBlock,
+        logger
+    );
+    if (logger && logger.info) console.log('Successfully deployed!');
+    return result;
+}
+
+async function deployZkAppsWithToken(
+    zkAppPairs: {
+        owner: ZkApp;
+        user: ZkApp;
+    }[],
+    feePayer: FeePayer,
+    waitForBlock = false,
+    logger?: Logger
+) {
+    if (logger && logger.info) {
+        console.log('Deploying:');
+        zkAppPairs.map((e) => {
+            console.log(`- ${e.user.name} with ${e.owner.name}'s token`);
+        });
+    }
+    let tx = await Mina.transaction(
+        {
+            sender: feePayer.sender.publicKey,
+            fee: feePayer.fee || TX_FEE,
+            memo: feePayer.memo,
+            nonce: await fetchNonce(feePayer.sender.publicKey),
+        },
+        async () => {
+            AccountUpdate.fundNewAccount(
+                feePayer.sender.publicKey,
+                zkAppPairs.length
+            );
+            let ownerSet: { [key: string]: SmartContract } = {};
+            zkAppPairs.map((e) => {
+                e.user.contract.deploy();
+                e.owner.contract.approve(e.user.contract.self);
+                Object.assign(ownerSet, {
+                    [e.owner.key.publicKey.toBase58()]: e.owner.contract,
+                });
+            });
+            Object.values(ownerSet).map((e) =>
+                AccountUpdate.attachToTransaction(e.self)
+            );
+        }
+    );
+    let result = await sendTx(
+        await tx.sign([
+            feePayer.sender.privateKey,
+            ...zkAppPairs.map((e) => e.user.key.privateKey),
         ]),
         waitForBlock,
         logger
