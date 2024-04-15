@@ -2,7 +2,7 @@ import { AccountUpdate, Field, PublicKey, SmartContract, TokenId } from 'o1js';
 
 export {
     updateActionState,
-    updateActionStateWithHash,
+    // updateActionStateWithHash,
     packNumberArray,
     unpackNumberArray,
     buildAssertMessage,
@@ -15,9 +15,10 @@ function updateActionState(state: Field, action: Field[][]) {
     return AccountUpdate.Actions.updateSequenceState(state, actionsHash);
 }
 
-function updateActionStateWithHash(state: Field, actionsHash: Field) {
-    return AccountUpdate.Actions.updateSequenceState(state, actionsHash);
-}
+// FIXME: incorrect hash
+// function updateActionStateWithHash(state: Field, actionsHash: Field) {
+//     return AccountUpdate.Actions.updateSequenceState(state, actionsHash);
+// }
 
 function packNumberArray(numbers: number[], maxSize: number): Field {
     return Field.fromBits(numbers.map((e) => Field(e).toBits(maxSize)).flat());

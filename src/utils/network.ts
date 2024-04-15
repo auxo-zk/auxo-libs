@@ -113,7 +113,7 @@ async function prove<T>(
         console.log('Current memory usage:', getMemoryUsage(), 'MB');
     if (logger && logger.info)
         console.log(`Generating proof for ${programName}.${methodName}()...`);
-    if (profiler) profiler.start(`${programName}.${methodName}.prove`);
+    if (profiler) profiler.start(`${programName}.${methodName}`);
     let result = await proofGeneration();
     if (profiler) profiler.stop();
     if (logger && logger.info) console.log('Generating proof done!');
@@ -131,7 +131,8 @@ async function sendTx(
         try {
             result = await tx.send();
             if (waitForBlock)
-                return await (result as PendingTransaction).wait();
+                result = await (result as PendingTransaction).wait();
+            if (logger && logger.info) console.log('Succeeded to send Tx!');
             return result;
         } catch (error) {
             retries--;
@@ -169,7 +170,7 @@ async function proveAndSendTx(
         console.log(
             `Generating proof and submit tx for ${contractName}.${methodName}()...`
         );
-    if (profiler) profiler.start(`${contractName}.${methodName}.prove`);
+    if (profiler) profiler.start(`${contractName}.${methodName}`);
     await tx.prove();
     if (profiler) profiler.stop();
     if (logger && logger.info) console.log('Generating proof done!');

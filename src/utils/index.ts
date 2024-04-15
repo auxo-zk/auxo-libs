@@ -1,7 +1,5 @@
 export { getProfiler, getMemoryUsage } from './benchmark.js';
 
-export { readConfig, readZkAppConfig, readUserConfig } from './config.js';
-
 export {
     Profiler,
     Logger,
@@ -37,7 +35,7 @@ export {
 
 export {
     updateActionState,
-    updateActionStateWithHash,
+    // updateActionStateWithHash,
     packNumberArray,
     buildAssertMessage,
     requireSignature,
