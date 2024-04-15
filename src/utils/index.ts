@@ -22,10 +22,12 @@ export {
 
 export {
     randomAccounts,
+    getZkApp,
     compile,
     prove,
     proveAndSendTx,
     deployZkApps,
+    deployZkAppsWithToken,
     sendTx,
     fetchNonce,
     fetchActions,
