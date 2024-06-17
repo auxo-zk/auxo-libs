@@ -3,10 +3,12 @@ import {
     Field,
     Mina,
     PrivateKey,
+    Provable,
     Reducer,
     SmartContract,
     State,
     TokenId,
+    UInt64,
     method,
     state,
 } from 'o1js';
@@ -26,8 +28,21 @@ import {
 } from './network.js';
 import { FeePayer, TX_FEE, ZkApp } from './constants.js';
 import { getProfiler } from './benchmark.js';
+import { fromUInt64ToScalar } from './math.js';
 
-describe('Utils', () => {
+describe('Math', () => {
+    it('Should convert UInt64 to Scalar', async () => {
+        expect(fromUInt64ToScalar(UInt64.from(0)).toBigInt()).toEqual(0n);
+        expect(fromUInt64ToScalar(UInt64.from(123456789)).toBigInt()).toEqual(
+            123456789n
+        );
+        expect(
+            fromUInt64ToScalar(UInt64.from(UInt64.MAXINT())).toBigInt()
+        ).toEqual(UInt64.MAXINT().toBigInt());
+    });
+});
+
+describe('Network', () => {
     class TestContract extends SmartContract {
         @state(Field) num = State<Field>();
 
@@ -64,26 +79,37 @@ describe('Utils', () => {
     let testZkApp1: ZkApp;
     let testZkApp2: ZkApp;
     let testZkAppWithToken: ZkApp;
-    const Local = Mina.LocalBlockchain({ proofsEnabled: doProofs });
-    Mina.setActiveInstance(Local);
 
     beforeAll(async () => {
-        feePayer = { sender: Local.testAccounts[0] };
+        const Local = await Mina.LocalBlockchain({ proofsEnabled: doProofs });
+        Mina.setActiveInstance(Local);
+
+        Provable.log(Local.testAccounts);
+        feePayer = {
+            sender: {
+                publicKey: Local.testAccounts[0],
+                privateKey: Local.testAccounts[0].key,
+            },
+        };
         let keyPairs = [...Array(3)].map(() => PrivateKey.randomKeypair());
         testZkApp1 = getZkApp(
             keyPairs[0],
             new TestContract(keyPairs[0].publicKey),
-            'TestContract1',
             {
-                num: Field(100),
+                name: 'TestContract1',
+                initArgs: {
+                    num: Field(100),
+                },
             }
         );
         testZkApp2 = getZkApp(
             keyPairs[1],
             new TestContract(keyPairs[1].publicKey),
-            'TestContract2',
             {
-                num: Field(200),
+                name: 'TestContract2',
+                initArgs: {
+                    num: Field(200),
+                },
             }
         );
         testZkAppWithToken = getZkApp(
@@ -92,7 +118,7 @@ describe('Utils', () => {
                 testZkApp1.key.publicKey,
                 TokenId.derive(testZkApp2.key.publicKey)
             ),
-            'TestContract1'
+            { name: 'TestContract1' }
         );
     });
 
@@ -105,11 +131,13 @@ describe('Utils', () => {
     });
 
     it('should compile contract', async () => {
-        if (doProofs) await compile(TestContract, cache, profiler, logger);
+        if (doProofs) await compile(TestContract, { cache, profiler, logger });
     });
 
     it('should deploy zkApp', async () => {
-        await deployZkApps([testZkApp1, testZkApp2], feePayer);
+        await deployZkApps([testZkApp1, testZkApp2], feePayer, true, {
+            logger,
+        });
     });
 
     it('should deploy zkApp with token', async () => {
@@ -120,7 +148,9 @@ describe('Utils', () => {
                     user: testZkAppWithToken,
                 },
             ],
-            feePayer
+            feePayer,
+            true,
+            { logger }
         );
     });
 
@@ -130,8 +160,7 @@ describe('Utils', () => {
             'test',
             async () =>
                 (testZkApp1.contract as TestContract).test(Field(1), Field(1)),
-            profiler,
-            logger
+            { profiler, logger }
         );
     });
 
@@ -147,7 +176,7 @@ describe('Utils', () => {
                 (testZkApp1.contract as TestContract).test(Field(1), Field(1))
         );
         await tx.prove();
-        await sendTx(tx.sign([feePayer.sender.privateKey]), true);
+        await sendTx(tx.sign([feePayer.sender.privateKey]), true, { logger });
     });
 
     it('should fail to send tx', async () => {
@@ -176,8 +205,7 @@ describe('Utils', () => {
                 ),
             feePayer,
             true,
-            profiler,
-            logger
+            { profiler, logger }
         );
     });
 

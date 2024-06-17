@@ -39,6 +39,7 @@ export {
     updateActionState,
     // updateActionStateWithHash,
     packNumberArray,
+    unpackNumberArray,
     buildAssertMessage,
     requireSignature,
     requireCaller,

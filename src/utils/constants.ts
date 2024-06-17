@@ -1,4 +1,5 @@
 import {
+    Cache,
     Field,
     IncludedTransaction,
     PendingTransaction,
@@ -25,6 +26,8 @@ export {
     TxResult,
     FetchedActions,
     FetchedEvents,
+    ZkAppOptions,
+    UtilsOptions,
 };
 
 const MAX_RETRY = 3;
@@ -124,4 +127,19 @@ type FetchedEvents = {
     parentBlockHash: string;
     globalSlot: UInt32;
     chainStatus: string;
+};
+
+type ZkAppOptions = {
+    name?: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    initArgs?: Record<string, any>;
+    actionStates?: Field[];
+    actions?: Field[][];
+    events?: Field[][];
+};
+
+type UtilsOptions = {
+    cache?: Cache;
+    profiler?: Profiler;
+    logger?: Logger;
 };

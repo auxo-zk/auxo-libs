@@ -22,7 +22,7 @@ function StaticArray<T>(type: ProvablePure<T>, length: number) {
         }
 
         static hash(value: T): Field {
-            return Poseidon.hash(type.toFields(value));
+            return _type.hash(value);
         }
 
         static Null(): T {

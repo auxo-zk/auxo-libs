@@ -6,11 +6,11 @@ import {
     Provable,
     ProvablePure,
     PublicKey,
+    Scalar,
     Struct,
 } from 'o1js';
 
 import { Bit255 } from './Bit255.js';
-import { CustomScalar } from './CustomScalar.js';
 import { hashable } from './Hashable.js';
 
 export {
@@ -45,7 +45,7 @@ function GroupDynamicArray(maxLength: number) {
 
 function ScalarDynamicArray(maxLength: number) {
     if (maxLength > 128) throw new Error('Exceed maximum size');
-    return DynamicArray(CustomScalar, maxLength);
+    return DynamicArray(Scalar, maxLength);
 }
 
 function PublicKeyDynamicArray(maxLength: number) {
@@ -74,7 +74,7 @@ function DynamicArray<T>(type: ProvablePure<T>, maxLength: number) {
         }
 
         static hash(value: T): Field {
-            return Poseidon.hash(type.toFields(value));
+            return _type.hash(value);
         }
 
         static Null(): T {

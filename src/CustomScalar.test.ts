@@ -13,7 +13,7 @@ describe('CustomScalar', () => {
         let min = UInt64.zero;
         let max = UInt64.MAXINT();
         let odd = UInt64.from(BigInt(10 ** 16) + 1n);
-        let even = UInt64.from(BigInt(10 ** 8) + 1n);
+        let even = UInt64.from(BigInt(10 ** 8));
         expect(CustomScalar.fromUInt64(min).toScalar().toBigInt()).toEqual(
             min.toBigInt()
         );
@@ -26,5 +26,23 @@ describe('CustomScalar', () => {
         expect(CustomScalar.fromUInt64(even).toScalar().toBigInt()).toEqual(
             even.toBigInt()
         );
+    });
+
+    it('Should assert equality correctly with message', async () => {
+        let a = CustomScalar.fromScalar(Scalar.from(1n));
+        let b = CustomScalar.fromScalar(Scalar.from(1n));
+        let c = CustomScalar.fromScalar(Scalar.from(2n));
+        expect(() => a.assertEquals(b, 'a and b are equal')).not.toThrow();
+        expect(() => a.assertEquals(c, 'a and c are not equal')).toThrow();
+    });
+
+    it('Should convert to and from fields correctly', async () => {
+        let original = CustomScalar.fromScalar(Scalar.random());
+        expect(original.toFields().length).toEqual(CustomScalar.sizeInFields());
+        expect(
+            CustomScalar.fromFields(original.toFields())
+                .equals(original)
+                .toBoolean()
+        ).toEqual(true);
     });
 });

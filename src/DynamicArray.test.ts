@@ -18,7 +18,6 @@ import {
     PublicKeyDynamicArray,
     ScalarDynamicArray,
 } from './DynamicArray.js';
-import { CustomScalar } from './CustomScalar.js';
 import { Bit255 } from './Bit255.js';
 
 describe('DynamicArray', () => {
@@ -83,7 +82,9 @@ describe('DynamicArray', () => {
             .assertEquals(
                 Poseidon.hash([
                     bit255Array.length,
-                    ...bit255Array.values.map((e) => e.toFields()).flat(),
+                    ...bit255Array.values
+                        .map((e) => new Bit255(e).toFields())
+                        .flat(),
                 ])
             );
     });
@@ -129,11 +130,7 @@ describe('DynamicArray', () => {
     });
 
     it('Should serialize ScalarDynamicArray correctly', async () => {
-        let scalarValues = [
-            CustomScalar.fromScalar(Scalar.random()),
-            CustomScalar.fromScalar(Scalar.random()),
-            CustomScalar.fromScalar(Scalar.random()),
-        ];
+        let scalarValues = [Scalar.random(), Scalar.random(), Scalar.random()];
         let scalarArray = new ScalarArray(scalarValues);
         ScalarArray.fromFields(scalarArray.toFields())
             .hash()

@@ -2,35 +2,26 @@ import { Bool, Field, Poseidon, Scalar, Struct, UInt64 } from 'o1js';
 import { fromUInt64ToScalar } from './utils/math.js';
 
 export class CustomScalar extends Struct({
-    head: Field,
-    tail: Field,
+    scalar: Scalar,
 }) {
     static fromScalar(scalar: Scalar): CustomScalar {
-        let bits = scalar.toFields().map((e) => Bool.fromFields([e]));
         return new CustomScalar({
-            head: Field.fromBits(bits.slice(0, 127)),
-            tail: Field.fromBits(bits.slice(127)),
+            scalar,
         });
     }
 
     static fromFields(fields: Field[]): CustomScalar {
         return new CustomScalar({
-            head: fields[0],
-            tail: fields[1],
+            scalar: Scalar.fromFields(fields),
         });
     }
 
     static toScalar(scalar: CustomScalar): Scalar {
-        return Scalar.fromBits(
-            scalar.head
-                .toBits()
-                .slice(0, 127)
-                .concat(scalar.tail.toBits().slice(0, 128))
-        );
+        return scalar.scalar;
     }
 
-    static toFields(value: { head: Field; tail: Field }): Field[] {
-        return [value.head].concat([value.tail]);
+    static toFields({ scalar }: { scalar: Scalar }): Field[] {
+        return scalar.toFields();
     }
 
     static sizeInFields(): number {
@@ -42,11 +33,11 @@ export class CustomScalar extends Struct({
     }
 
     hash(): Field {
-        return Poseidon.hash(this.toScalar().toFields());
+        return Poseidon.hash(this.toFields());
     }
 
     equals(s: CustomScalar): Bool {
-        return this.head.equals(s.head).and(this.tail.equals(s.tail));
+        return this.hash().equals(s.hash());
     }
 
     assertEquals(s: CustomScalar, message?: string | undefined): void {
@@ -59,9 +50,5 @@ export class CustomScalar extends Struct({
 
     toFields(): Field[] {
         return CustomScalar.toFields(this);
-    }
-
-    fromFields(fields: Field[]): CustomScalar {
-        return CustomScalar.fromFields(fields);
     }
 }

@@ -1,5 +1,4 @@
-import { Bool, Field, Poseidon, Provable, Scalar, Struct } from 'o1js';
-import { CustomScalar } from './CustomScalar.js';
+import { Bool, Field, Gadgets, Poseidon, Provable, Scalar, Struct } from 'o1js';
 
 // WARNING - Convert between Scalar and Bit255 does not preserve bigint value
 export class Bit255 extends Struct({
@@ -7,18 +6,14 @@ export class Bit255 extends Struct({
     tail: Field,
 }) {
     static fromScalar(scalar: Scalar): Bit255 {
-        let bits = scalar.toFields().map((e) => Bool.fromFields([e]));
         return new Bit255({
-            head: Field.fromBits(bits.slice(0, 127)),
-            tail: Field.fromBits(bits.slice(127)),
+            head: scalar.toFields()[0],
+            tail: scalar.toFields()[1],
         });
     }
 
     static toScalar(b: Bit255): Scalar {
-        return new CustomScalar({
-            head: b.head,
-            tail: b.tail,
-        }).toScalar();
+        return Scalar.fromFields([b.head, b.tail]);
     }
 
     static fromFields(fields: Field[]): Bit255 {
@@ -37,16 +32,17 @@ export class Bit255 extends Struct({
     }
 
     static xor(a: Bit255, b: Bit255): Bit255 {
-        return Provable.witness(Bit255, () =>
-            Bit255.fromBigInt(a.toBigInt() ^ b.toBigInt())
-        );
+        return new Bit255({
+            head: Gadgets.xor(a.head, b.head, 1),
+            tail: Gadgets.xor(a.tail, b.tail, 254),
+        });
     }
 
     static fromBits(bits: Bool[]): Bit255 {
         if (bits.length !== 255) throw new Error('Invalid input length');
         return new Bit255({
-            head: Field.fromBits(bits.slice(0, 127)),
-            tail: Field.fromBits(bits.slice(127)),
+            head: Field.fromBits(bits.slice(0, 1)),
+            tail: Field.fromBits(bits.slice(1)),
         });
     }
 
@@ -64,8 +60,8 @@ export class Bit255 extends Struct({
     static toBigInt(b: Bit255): bigint {
         let bits = b.head
             .toBits()
-            .slice(0, 127)
-            .concat(b.tail.toBits().slice(0, 128));
+            .slice(0, 1)
+            .concat(b.tail.toBits().slice(0, 254));
         let res = 0n;
         for (let i = 0; i < 255; i++) {
             if (bits[i].toBoolean()) res += BigInt(Math.pow(2, i));

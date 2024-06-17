@@ -8,13 +8,5 @@ const SHIFT_CONST_EVEN = Scalar.from(SHIFT_CONST_ODD)
     .toBigInt();
 
 function fromUInt64ToScalar(number: UInt64): Scalar {
-    return Provable.if(
-        number.value.isEven(),
-        Scalar.fromBits(
-            number.value.div(2).add(Field(SHIFT_CONST_EVEN)).toBits()
-        ),
-        Scalar.fromBits(
-            number.value.add(Field(SHIFT_CONST_ODD)).div(2).toBits()
-        )
-    );
+    return Scalar.fromBits(number.value.toBits());
 }
