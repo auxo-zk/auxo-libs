@@ -14,11 +14,7 @@ export {
     FetchedEvents,
 } from './constants.js';
 
-export {
-    SHIFT_CONST_ODD,
-    SHIFT_CONST_EVEN,
-    fromUInt64ToScalar,
-} from './math.js';
+export { fromUInt64ToScalar } from './math.js';
 
 export {
     randomAccounts,
@@ -37,10 +33,10 @@ export {
 
 export {
     updateActionState,
-    // updateActionStateWithHash,
     packNumberArray,
     unpackNumberArray,
     buildAssertMessage,
     requireSignature,
     requireCaller,
+    checkCondition,
 } from './zkApp.js';

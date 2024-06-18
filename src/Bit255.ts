@@ -1,4 +1,4 @@
-import { Bool, Field, Gadgets, Poseidon, Provable, Scalar, Struct } from 'o1js';
+import { Bool, Field, Gadgets, Poseidon, Scalar, Struct } from 'o1js';
 
 // WARNING - Convert between Scalar and Bit255 does not preserve bigint value
 export class Bit255 extends Struct({

@@ -1,24 +1,28 @@
-import { AccountUpdate, Field, PublicKey, SmartContract, TokenId } from 'o1js';
+import {
+    AccountUpdate,
+    Bool,
+    Field,
+    Provable,
+    PublicKey,
+    SmartContract,
+    TokenId,
+    Void,
+} from 'o1js';
 
 export {
     updateActionState,
-    // updateActionStateWithHash,
     packNumberArray,
     unpackNumberArray,
     buildAssertMessage,
     requireSignature,
     requireCaller,
+    checkCondition,
 };
 
 function updateActionState(state: Field, action: Field[][]) {
     let actionsHash = AccountUpdate.Actions.hash(action);
     return AccountUpdate.Actions.updateSequenceState(state, actionsHash);
 }
-
-// FIXME: incorrect hash
-// function updateActionStateWithHash(state: Field, actionsHash: Field) {
-//     return AccountUpdate.Actions.updateSequenceState(state, actionsHash);
-// }
 
 function packNumberArray(numbers: number[], maxSize: number): Field {
     return Field.fromBits(numbers.map((e) => Field(e).toBits(maxSize)).flat());
@@ -58,4 +62,13 @@ function requireCaller(address: PublicKey, contract: SmartContract) {
     );
     update.body.mayUseToken = AccountUpdate.MayUseToken.InheritFromParent;
     return update;
+}
+
+function checkCondition(condition: Bool, message: string) {
+    Provable.witness(Void, () => {
+        if (!condition.toBoolean()) {
+            console.error(message);
+        }
+    });
+    return condition;
 }
