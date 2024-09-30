@@ -1,6 +1,6 @@
 {
     "name": "@auxo-dev/auxo-libs",
-    "version": "0.6.1",
+    "version": "0.6.3",
     "description": "",
     "author": "",
     "license": "Apache-2.0",
@@ -17,6 +17,7 @@
     "types": "./build/types/src/index.d.ts",
     "scripts": {
         "build": "tsc --build tsconfig.esm.json tsconfig.cjs.json tsconfig.types.json && ./fix-export.sh",
+        "build:clean": "rm -rf build && rm package-lock.json && tsc --build tsconfig.esm.json tsconfig.cjs.json tsconfig.types.json && ./fix-export.sh",
         "buildw": "tsc --watch",
         "scripts": "tsc --build tsconfig.json tsconfig.cjs.json tsconfig.types.json && ./fix-export.sh && node",
         "coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",

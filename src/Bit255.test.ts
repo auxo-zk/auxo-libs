@@ -1,4 +1,12 @@
-import { Provable, Reducer, Scalar, SmartContract, method } from 'o1js';
+import {
+    Bool,
+    Field,
+    Provable,
+    Reducer,
+    Scalar,
+    SmartContract,
+    method,
+} from 'o1js';
 import { Bit255 } from './Bit255.js';
 
 describe('Bit255', () => {
@@ -73,5 +81,17 @@ describe('Bit255', () => {
         let b = Bit255.fromScalar(Scalar.random());
         let converted = Bit255.fromBits(b.toBits());
         expect(b.toBigInt()).toEqual(converted.toBigInt());
+    });
+
+    it('Should preserve correctness between bigint and bits', async () => {
+        let r = Field.random();
+        let bi = r.toBigInt();
+        let bits = r.toBits();
+        expect(Bit255.fromBits(bits.concat([Bool(false)])).toBigInt()).toEqual(
+            bi
+        );
+        // let b2 = Bit255.fromBigInt(b.toBigInt());
+        // expect(b.toBigInt()).toEqual(b1.toBigInt());
+        // expect(b.toBigInt()).toEqual(b2.toBigInt());
     });
 });
