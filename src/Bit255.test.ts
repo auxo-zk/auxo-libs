@@ -68,4 +68,10 @@ describe('Bit255', () => {
         let converted = Bit255.fromFields(b.toFields());
         expect(b.toBigInt()).toEqual(converted.toBigInt());
     });
+
+    it('Should convert between bits correctly', async () => {
+        let b = Bit255.fromScalar(Scalar.random());
+        let converted = Bit255.fromBits(b.toBits());
+        expect(b.toBigInt()).toEqual(converted.toBigInt());
+    });
 });
