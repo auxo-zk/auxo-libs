@@ -1,6 +1,9 @@
 import { Bool, Field, Poseidon, Scalar, Struct, UInt64 } from 'o1js';
 import { fromUInt64ToScalar } from './utils/math.js';
 
+/**
+ * @deprecated This class is deprecated. Use Scalar instead.
+ */
 export class CustomScalar extends Struct({
     scalar: Scalar,
 }) {

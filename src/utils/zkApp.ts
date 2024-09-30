@@ -64,10 +64,10 @@ function requireCaller(address: PublicKey, contract: SmartContract) {
     return update;
 }
 
-function checkCondition(condition: Bool, message: string) {
+function checkCondition(condition: Bool, message?: string) {
     Provable.witness(Void, () => {
         if (!condition.toBoolean()) {
-            console.error(message);
+            console.error(message || 'Unknown error!');
         }
     });
     return condition;

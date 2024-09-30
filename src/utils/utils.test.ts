@@ -59,7 +59,7 @@ describe('Network', () => {
 
         @method
         async testWithSender(value1: Field, value2: Field) {
-            this.sender.getAndRequireSignature();
+            this.sender.getAndRequireSignatureV2();
             value1.assertEquals(value2);
             this.num.set(value1);
             this.reducer.dispatch(value1);
