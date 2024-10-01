@@ -9,6 +9,8 @@ import {
     State,
     TokenId,
     UInt64,
+    Void,
+    ZkProgram,
     method,
     state,
 } from 'o1js';
@@ -67,6 +69,18 @@ describe('Network', () => {
         }
     }
 
+    const TestProgram = ZkProgram({
+        name: 'TestProgram',
+        methods: {
+            dummy: {
+                privateInputs: [],
+                async method() {
+                    return;
+                },
+            },
+        },
+    });
+
     const doProofs = true;
     const cache = Cache.FileSystem('caches');
     const logger = {
@@ -122,7 +136,7 @@ describe('Network', () => {
         );
     });
 
-    it('should generate random accounts', async () => {
+    it('Should generate random accounts', async () => {
         const accountNames = ['test1', 'test2', 'test1'];
         const accounts = randomAccounts(accountNames);
         expect(Object.entries(accounts).length).toEqual(
@@ -130,17 +144,35 @@ describe('Network', () => {
         );
     });
 
-    it('should compile contract', async () => {
-        if (doProofs) await compile(TestContract, { cache, profiler, logger });
+    it('Should compile', async () => {
+        await compile(TestProgram, {
+            cache,
+            profiler,
+            logger,
+            proofsEnabled: false,
+        });
+        if (doProofs)
+            await compile(TestContract, {
+                cache,
+                profiler,
+                logger,
+                proofsEnabled: undefined,
+            });
+        await compile(TestProgram, {
+            cache,
+            profiler,
+            logger,
+            proofsEnabled: true,
+        });
     });
 
-    it('should deploy zkApp', async () => {
+    it('Should deploy zkApp', async () => {
         await deployZkApps([testZkApp1, testZkApp2], feePayer, true, {
             logger,
         });
     });
 
-    it('should deploy zkApp with token', async () => {
+    it('Should deploy zkApp with token', async () => {
         await deployZkAppsWithToken(
             [
                 {
@@ -154,7 +186,7 @@ describe('Network', () => {
         );
     });
 
-    it('should prove', async () => {
+    it('Should prove', async () => {
         await prove(
             TestContract.name,
             'test',
@@ -164,7 +196,7 @@ describe('Network', () => {
         );
     });
 
-    it('should send tx', async () => {
+    it('Should send tx', async () => {
         let tx = await Mina.transaction(
             {
                 sender: feePayer.sender.publicKey,
@@ -179,7 +211,7 @@ describe('Network', () => {
         await sendTx(tx.sign([feePayer.sender.privateKey]), true, { logger });
     });
 
-    it('should fail to send tx', async () => {
+    it('Should fail to send tx', async () => {
         let tx = await Mina.transaction(
             {
                 sender: feePayer.sender.publicKey,
@@ -194,7 +226,7 @@ describe('Network', () => {
         expect(sendTx(tx, true)).rejects.toThrow();
     });
 
-    it('should prove and send tx', async () => {
+    it('Should prove and send tx', async () => {
         await proveAndSendTx(
             TestContract.name,
             'test',
@@ -209,7 +241,7 @@ describe('Network', () => {
         );
     });
 
-    it('should fetch actions', async () => {
+    it('Should fetch actions', async () => {
         let actions = await fetchActions(
             testZkApp1.key.publicKey,
             Reducer.initialActionState
@@ -217,12 +249,12 @@ describe('Network', () => {
         expect(actions.length).toBeGreaterThan(0);
     });
 
-    it('should fetch events', async () => {
+    it('Should fetch events', async () => {
         let events = await fetchEvents(testZkApp1.key.publicKey);
         expect(events.length).toBeGreaterThan(0);
     });
 
-    it('should fetch state', async () => {
+    it('Should fetch state', async () => {
         let state = await fetchZkAppState(testZkApp1.key.publicKey);
         expect(state.length).toEqual(8);
     });

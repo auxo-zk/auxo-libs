@@ -117,16 +117,23 @@ async function compile(
     verificationKey: { data: string; hash: Field };
 }> {
     let result;
-    if (options.logger && options.logger.memoryUsage)
+    let { cache, forceRecompile, proofsEnabled, profiler, logger } = options;
+    if (logger && logger.memoryUsage)
         console.log('Current memory usage:', getMemoryUsage(), 'MB');
-    if (options.logger && options.logger.info)
-        console.log(`Compiling ${program.name}...`);
-    if (options.profiler) options.profiler.start(`${program.name}.compile`);
-    if (options.cache) result = await program.compile({ cache: options.cache });
-    else result = await program.compile();
-    if (options.profiler) options.profiler.stop();
-    if (options.logger && options.logger.info) console.log('Compiling done!');
-    if (options.logger && options.logger.memoryUsage)
+    if (logger && logger.info) console.log(`Compiling ${program.name}...`);
+    if (profiler) profiler.start(`${program.name}.compile`);
+    if (proofsEnabled)
+        result = await program.compile({
+            cache,
+            forceRecompile,
+            proofsEnabled,
+        });
+    else {
+        result = await program.compile({ cache, forceRecompile });
+    }
+    if (profiler) profiler.stop();
+    if (logger && logger.info) console.log('Compiling done!');
+    if (logger && logger.memoryUsage)
         console.log('Current memory usage:', getMemoryUsage(), 'MB');
     return result;
 }
@@ -163,16 +170,15 @@ async function prove<T>(
     proofGeneration: () => Promise<T>,
     options: UtilsOptions = {}
 ): Promise<T> {
-    if (options.logger && options.logger.memoryUsage)
+    let { profiler, logger } = options;
+    if (logger && logger.memoryUsage)
         console.log('Current memory usage:', getMemoryUsage(), 'MB');
-    if (options.logger && options.logger.info)
+    if (logger && logger.info)
         console.log(`Generating proof for ${programName}.${methodName}()...`);
-    if (options.profiler)
-        options.profiler.start(`${programName}.${methodName}`);
+    if (profiler) profiler.start(`${programName}.${methodName}`);
     let result = await proofGeneration();
-    if (options.profiler) options.profiler.stop();
-    if (options.logger && options.logger.info)
-        console.log('Generating proof done!');
+    if (profiler) profiler.stop();
+    if (logger && logger.info) console.log('Generating proof done!');
     return result;
 }
 

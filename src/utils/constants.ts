@@ -140,6 +140,8 @@ type ZkAppOptions = {
 
 type UtilsOptions = {
     cache?: Cache;
+    forceRecompile?: boolean;
+    proofsEnabled?: boolean;
     profiler?: Profiler;
     logger?: Logger;
 };
