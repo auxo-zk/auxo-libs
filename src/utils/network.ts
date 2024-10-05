@@ -122,7 +122,7 @@ async function compile(
         console.log('Current memory usage:', getMemoryUsage(), 'MB');
     if (logger && logger.info) console.log(`Compiling ${program.name}...`);
     if (profiler) profiler.start(`${program.name}.compile`);
-    if (proofsEnabled)
+    if (proofsEnabled !== undefined)
         result = await program.compile({
             cache,
             forceRecompile,

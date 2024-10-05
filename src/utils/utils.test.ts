@@ -9,7 +9,6 @@ import {
     State,
     TokenId,
     UInt64,
-    Void,
     ZkProgram,
     method,
     state,
@@ -158,12 +157,6 @@ describe('Network', () => {
                 logger,
                 proofsEnabled: undefined,
             });
-        await compile(TestProgram, {
-            cache,
-            profiler,
-            logger,
-            proofsEnabled: true,
-        });
     });
 
     it('Should deploy zkApp', async () => {
