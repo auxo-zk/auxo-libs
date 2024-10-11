@@ -14,6 +14,7 @@ export {
     packNumberArray,
     unpackNumberArray,
     buildAssertMessage,
+    checkInvalidAction,
     requireSignature,
     requireCaller,
     checkCondition,
@@ -45,9 +46,18 @@ function unpackNumberArray(packed: Field, maxSize: number): number[] {
 function buildAssertMessage(
     circuit: string,
     method: string,
-    errorEnum: string
+    errorMsg: string
 ): string {
-    return `${circuit}::${method}: ${errorEnum}`;
+    return `${circuit}::${method}: ${errorMsg}`;
+}
+
+function checkInvalidAction(flag: Bool, check: Bool, message?: string) {
+    Provable.witness(Void, () => {
+        if (check.not().toBoolean()) {
+            console.info(message || 'Unknown error!');
+        }
+    });
+    return flag.or(check.not());
 }
 
 function requireSignature(address: PublicKey) {

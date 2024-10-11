@@ -95,8 +95,8 @@ type ZkApp = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     initArgs?: Record<string, any>;
     actionStates: Field[];
-    actions: Field[][];
-    events: Field[][];
+    actionss: Field[][][];
+    eventss: Field[][][];
 };
 
 type FeePayer = {
@@ -134,8 +134,8 @@ type ZkAppOptions = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     initArgs?: Record<string, any>;
     actionStates?: Field[];
-    actions?: Field[][];
-    events?: Field[][];
+    actionss?: Field[][][];
+    eventss?: Field[][][];
 };
 
 type UtilsOptions = {

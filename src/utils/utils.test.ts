@@ -1,4 +1,5 @@
 import {
+    Bool,
     Cache,
     Field,
     Mina,
@@ -30,6 +31,7 @@ import {
 import { FeePayer, TX_FEE, ZkApp } from './constants.js';
 import { getProfiler } from './benchmark.js';
 import { fromUInt64ToScalar } from './math.js';
+import { checkInvalidAction } from './zkApp.js';
 
 describe('Math', () => {
     it('Should convert UInt64 to Scalar', async () => {
@@ -65,6 +67,17 @@ describe('Network', () => {
             this.num.set(value1);
             this.reducer.dispatch(value1);
             this.emitEvent('test', value2);
+        }
+
+        @method
+        async checkAction(action: Field) {
+            let flag = Bool(false);
+            flag = checkInvalidAction(
+                flag,
+                action.equals(Field(1)),
+                'Test error'
+            );
+            Provable.log(flag);
         }
     }
 
@@ -231,6 +244,30 @@ describe('Network', () => {
             feePayer,
             true,
             { profiler, logger }
+        );
+    });
+
+    it('Should check and log invalid action', async () => {
+        await Mina.transaction(
+            {
+                sender: feePayer.sender.publicKey,
+                fee: feePayer.fee || TX_FEE,
+                memo: feePayer.memo,
+                nonce: feePayer.nonce,
+            },
+            async () =>
+                (testZkApp1.contract as TestContract).checkAction(Field(1))
+        );
+
+        await Mina.transaction(
+            {
+                sender: feePayer.sender.publicKey,
+                fee: feePayer.fee || TX_FEE,
+                memo: feePayer.memo,
+                nonce: feePayer.nonce,
+            },
+            async () =>
+                (testZkApp1.contract as TestContract).checkAction(Field(0))
         );
     });
 

@@ -79,8 +79,8 @@ function getZkApp(
         name: options.name || 'Unknown',
         initArgs: options.initArgs || {},
         actionStates: options.actionStates || [Reducer.initialActionState],
-        actions: options.actions || [],
-        events: options.events || [],
+        actionss: options.actionss || [],
+        eventss: options.eventss || [],
     };
 }
 

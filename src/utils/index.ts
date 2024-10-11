@@ -36,6 +36,7 @@ export {
     packNumberArray,
     unpackNumberArray,
     buildAssertMessage,
+    checkInvalidAction,
     requireSignature,
     requireCaller,
     checkCondition,
