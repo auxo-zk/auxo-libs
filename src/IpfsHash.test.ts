@@ -5,9 +5,7 @@ describe('IpfsHash', () => {
     it('Should be provable code', async () => {
         Provable.runAndCheck(() => {
             let ipfsHash = 'QmdfTbBqBPQ7VNxZEYEj14VmRuZBkqFbiwReogJgS1zR1n';
-            let encodedData = Provable.witness(IpfsHash, () => {
-                return IpfsHash.fromString(ipfsHash);
-            });
+            return IpfsHash.fromString(ipfsHash);
         });
     });
 

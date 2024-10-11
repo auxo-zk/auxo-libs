@@ -21,7 +21,7 @@ export {
 };
 
 function updateActionState(state: Field, action: Field[][]) {
-    let actionsHash = AccountUpdate.Actions.hash(action);
+    let actionsHash = AccountUpdate.Actions.hash(action.reverse());
     return AccountUpdate.Actions.updateSequenceState(state, actionsHash);
 }
 

@@ -31,7 +31,7 @@ import {
 import { FeePayer, TX_FEE, ZkApp } from './constants.js';
 import { getProfiler } from './benchmark.js';
 import { fromUInt64ToScalar } from './math.js';
-import { checkInvalidAction } from './zkApp.js';
+import { checkInvalidAction, updateActionState } from './zkApp.js';
 
 describe('Math', () => {
     it('Should convert UInt64 to Scalar', async () => {
@@ -78,6 +78,12 @@ describe('Network', () => {
                 'Test error'
             );
             Provable.log(flag);
+        }
+
+        @method
+        async multipleActions(action1: Field, action2: Field) {
+            this.reducer.dispatch(action1);
+            this.reducer.dispatch(action2);
         }
     }
 
@@ -269,6 +275,33 @@ describe('Network', () => {
             async () =>
                 (testZkApp1.contract as TestContract).checkAction(Field(0))
         );
+    });
+
+    it('Should calculate correct hash', async () => {
+        let currentActionState = testZkApp1.contract.account.actionState.get();
+        let tx = await Mina.transaction(
+            {
+                sender: feePayer.sender.publicKey,
+                fee: feePayer.fee || TX_FEE,
+                memo: feePayer.memo,
+                nonce: feePayer.nonce,
+            },
+            async () =>
+                (testZkApp1.contract as TestContract).multipleActions(
+                    Field(1),
+                    Field(2)
+                )
+        );
+        await tx.prove();
+        await sendTx(tx.sign([feePayer.sender.privateKey]), true, { logger });
+        let newActionState = testZkApp1.contract.account.actionState.get();
+        // let actionsHash = updateActionState(currentActionState, [[Field(1)]]);
+        // actionsHash = updateActionState(actionsHash, [[Field(2)]]);
+        let actionsHash = updateActionState(currentActionState, [
+            [Field(1)],
+            [Field(2)],
+        ]);
+        expect(newActionState).toEqual(actionsHash);
     });
 
     it('Should fetch actions', async () => {
