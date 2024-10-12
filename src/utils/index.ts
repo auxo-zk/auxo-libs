@@ -14,7 +14,7 @@ export {
     FetchedEvents,
 } from './constants.js';
 
-export { fromUInt64ToScalar } from './math.js';
+export { divExact, fromUInt64ToScalar, getBitLength } from './math.js';
 
 export {
     randomAccounts,
@@ -32,12 +32,16 @@ export {
 } from './network.js';
 
 export {
-    updateActionState,
-    packNumberArray,
-    unpackNumberArray,
+    assertRollupActions,
+    assertRollupField,
+    assertRollupFields,
     buildAssertMessage,
-    checkInvalidAction,
-    requireSignature,
-    requireCaller,
+    buildInvalidActionMessage,
     checkCondition,
+    checkInvalidAction,
+    packNumberArray,
+    requireCaller,
+    requireSignature,
+    updateActionState,
+    unpackNumberArray,
 } from './zkApp.js';

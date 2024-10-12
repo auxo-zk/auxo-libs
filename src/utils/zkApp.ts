@@ -2,6 +2,7 @@ import {
     AccountUpdate,
     Bool,
     Field,
+    MerkleList,
     Provable,
     PublicKey,
     SmartContract,
@@ -10,14 +11,18 @@ import {
 } from 'o1js';
 
 export {
-    updateActionState,
-    packNumberArray,
-    unpackNumberArray,
+    assertRollupActions,
+    assertRollupField,
+    assertRollupFields,
     buildAssertMessage,
-    checkInvalidAction,
-    requireSignature,
-    requireCaller,
+    buildInvalidActionMessage,
     checkCondition,
+    checkInvalidAction,
+    packNumberArray,
+    requireCaller,
+    requireSignature,
+    updateActionState,
+    unpackNumberArray,
 };
 
 function updateActionState(state: Field, action: Field[][]) {
@@ -51,6 +56,14 @@ function buildAssertMessage(
     return `${circuit}::${method}: ${errorMsg}`;
 }
 
+function buildInvalidActionMessage(
+    circuit: string,
+    method: string,
+    errorMsg: string
+): string {
+    return `${circuit}::${method}: Skipping invalid action: ${errorMsg}`;
+}
+
 function checkInvalidAction(flag: Bool, check: Bool, message?: string) {
     Provable.witness(Void, () => {
         if (check.not().toBoolean()) {
@@ -81,4 +94,62 @@ function checkCondition(condition: Bool, message?: string) {
         }
     });
     return condition;
+}
+
+function assertRollupField(
+    proofValue: Field,
+    stateValue: Field,
+    message?: string
+) {
+    proofValue.assertEquals(
+        stateValue,
+        message || 'Incorrect initial rollup value'
+    );
+}
+
+function assertRollupFields(
+    proofValue: Array<Field>,
+    stateValue: Array<Field>,
+    numFields: number
+) {
+    for (let i = 0; i < numFields; i++) {
+        assertRollupField(proofValue[i], stateValue[i]);
+    }
+}
+
+function assertRollupActions(
+    proof: {
+        initialActionState: Field;
+        nextActionState: Field;
+    },
+    curActionState: Field,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    actions: MerkleList<MerkleList<any>>,
+    MAX_ROLLUP_ACTIONS: number,
+    message?: string
+) {
+    assertRollupField(proof.initialActionState, curActionState);
+    let checkActionStateExists = Bool(false);
+    let nextActionState = curActionState;
+    let iter = actions.startIterating();
+    for (let i = 0; i < MAX_ROLLUP_ACTIONS; i++) {
+        let isEmpty = iter.isAtEnd();
+        let merkleActions = iter.next();
+        nextActionState = Provable.if(
+            isEmpty,
+            nextActionState,
+            AccountUpdate.Actions.updateSequenceState(
+                nextActionState,
+                merkleActions.hash
+            )
+        );
+        checkActionStateExists = checkActionStateExists.or(
+            Provable.if(
+                isEmpty,
+                Bool(false),
+                nextActionState.equals(proof.nextActionState)
+            )
+        );
+    }
+    checkActionStateExists.assertTrue(message || 'Incorrect next rollup state');
 }
