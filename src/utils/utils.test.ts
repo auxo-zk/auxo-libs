@@ -30,20 +30,13 @@ import {
 } from './network.js';
 import { FeePayer, TX_FEE, ZkApp } from './constants.js';
 import { getProfiler } from './benchmark.js';
-import { fromUInt64ToScalar } from './math.js';
+import {
+    divExact,
+    fieldXOR,
+    fromUInt64ToScalar,
+    getBitLength,
+} from './math.js';
 import { checkInvalidAction, updateActionState } from './zkApp.js';
-
-describe('Math', () => {
-    it('Should convert UInt64 to Scalar', async () => {
-        expect(fromUInt64ToScalar(UInt64.from(0)).toBigInt()).toEqual(0n);
-        expect(fromUInt64ToScalar(UInt64.from(123456789)).toBigInt()).toEqual(
-            123456789n
-        );
-        expect(
-            fromUInt64ToScalar(UInt64.from(UInt64.MAXINT())).toBigInt()
-        ).toEqual(UInt64.MAXINT().toBigInt());
-    });
-});
 
 describe('Network', () => {
     class TestContract extends SmartContract {
@@ -324,5 +317,61 @@ describe('Network', () => {
 
     afterAll(async () => {
         profiler.store();
+    });
+});
+
+describe('Math', () => {
+    it('Should convert UInt64 to Scalar', async () => {
+        expect(fromUInt64ToScalar(UInt64.from(0)).toBigInt()).toEqual(0n);
+        expect(fromUInt64ToScalar(UInt64.from(123456789)).toBigInt()).toEqual(
+            123456789n
+        );
+        expect(
+            fromUInt64ToScalar(UInt64.from(UInt64.MAXINT())).toBigInt()
+        ).toEqual(UInt64.MAXINT().toBigInt());
+    });
+    it('Should convert UInt64 to Scalar', async () => {
+        expect(fromUInt64ToScalar(UInt64.from(0)).toBigInt()).toEqual(0n);
+        expect(fromUInt64ToScalar(UInt64.from(123456789)).toBigInt()).toEqual(
+            123456789n
+        );
+        expect(
+            fromUInt64ToScalar(UInt64.from(UInt64.MAXINT())).toBigInt()
+        ).toEqual(UInt64.MAXINT().toBigInt());
+    });
+
+    it('Should get correct bit length', async () => {
+        expect(getBitLength(0)).toEqual(1);
+        expect(getBitLength(1)).toEqual(1);
+        expect(getBitLength(2)).toEqual(2);
+        expect(getBitLength(3)).toEqual(2);
+        expect(getBitLength(4)).toEqual(3);
+        expect(getBitLength(255)).toEqual(8);
+        expect(getBitLength(256)).toEqual(9);
+    });
+
+    it('Should perform exact division', async () => {
+        expect(divExact(Field(10), Field(2)).toBoolean()).toBe(true);
+        expect(divExact(Field(10), Field(3)).toBoolean()).toBe(false);
+        expect(divExact(Field(0), Field(1)).toBoolean()).toBe(true);
+        expect(() => divExact(Field(1), Field(0)).toBoolean()).toThrow();
+    });
+
+    it('Should perform field XOR', async () => {
+        expect(fieldXOR(Field(0), Field(0)).toBigInt()).toEqual(0n);
+        expect(fieldXOR(Field(1), Field(0)).toBigInt()).toEqual(1n);
+        expect(fieldXOR(Field(1), Field(1)).toBigInt()).toEqual(0n);
+        expect(fieldXOR(Field(123456789), Field(987654321)).toBigInt()).toEqual(
+            BigInt(123456789) ^ BigInt(987654321)
+        );
+        let f1 = Field.random();
+        let f2 = Field.random();
+        expect(fieldXOR(f1, f2).toBigInt()).toEqual(
+            f1.toBigInt() ^ f2.toBigInt()
+        );
+        expect(fieldXOR(f1, f1).toBigInt()).toEqual(0n);
+        expect(fieldXOR(fieldXOR(f1, f2), f2).toBigInt()).toEqual(
+            f1.toBigInt()
+        );
     });
 });

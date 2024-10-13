@@ -14,7 +14,12 @@ export {
     FetchedEvents,
 } from './constants.js';
 
-export { divExact, fromUInt64ToScalar, getBitLength } from './math.js';
+export {
+    divExact,
+    fieldXOR,
+    fromUInt64ToScalar,
+    getBitLength,
+} from './math.js';
 
 export {
     randomAccounts,

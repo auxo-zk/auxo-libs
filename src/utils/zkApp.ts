@@ -103,17 +103,18 @@ function assertRollupField(
 ) {
     proofValue.assertEquals(
         stateValue,
-        message || 'Incorrect initial rollup value'
+        (message || '') + ' incorrect initial rollup value'
     );
 }
 
 function assertRollupFields(
     proofValue: Array<Field>,
     stateValue: Array<Field>,
-    numFields: number
+    numFields: number,
+    message?: string
 ) {
     for (let i = 0; i < numFields; i++) {
-        assertRollupField(proofValue[i], stateValue[i]);
+        assertRollupField(proofValue[i], stateValue[i], message);
     }
 }
 
@@ -123,12 +124,13 @@ function assertRollupActions(
         nextActionState: Field;
     },
     curActionState: Field,
+    latestActionState: Field,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     actions: MerkleList<MerkleList<any>>,
     MAX_ROLLUP_ACTIONS: number,
     message?: string
 ) {
-    assertRollupField(proof.initialActionState, curActionState);
+    assertRollupField(proof.initialActionState, curActionState, message);
     let checkActionStateExists = Bool(false);
     let nextActionState = curActionState;
     let iter = actions.startIterating();
@@ -151,5 +153,11 @@ function assertRollupActions(
             )
         );
     }
-    checkActionStateExists.assertTrue(message || 'Incorrect next rollup state');
+    checkActionStateExists.assertTrue(
+        (message || '') + ' incorrect next rollup state'
+    );
+    nextActionState.assertEquals(
+        latestActionState,
+        (message || '') + ' incorrect action list'
+    );
 }
